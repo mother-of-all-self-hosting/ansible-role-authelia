@@ -1,0 +1,594 @@
+---
+
+# Project source code URL: https://github.com/authelia/authelia
+
+authelia_enabled: true
+
+authelia_identifier: authelia
+
+authelia_uid: ''
+authelia_gid: ''
+
+authelia_scheme: https
+
+# The hostname at which authelia is served.
+authelia_hostname: ''
+
+# The path at which authelia is served.
+# This value must either be `/` or not end with a slash (e.g. `/authelia`).
+# As of right now, Authelia cannot be hosted at a subpath, so this can only possibly be set to `/`.
+authelia_path_prefix: /
+
+authelia_version: 4.37.5
+
+authelia_base_path: "/{{ authelia_identifier }}"
+authelia_config_path: "{{ authelia_base_path }}/config"
+# authelia_config_user_database_path is the on-host path to the user database file for the file-based authentication backend.
+# See:
+# - authelia_config_authentication_backend_file_path
+# - authelia_config_authentication_backend_file_content
+authelia_config_user_database_path: "{{ authelia_config_path }}/users.yml"
+authelia_data_path: "{{ authelia_base_path }}/data"
+
+authelia_container_image: "{{ authelia_container_image_registry_prefix }}authelia/authelia:{{ authelia_container_image_tag }}"
+authelia_container_image_registry_prefix: docker.io/
+authelia_container_image_tag: "{{ authelia_version }}"
+authelia_container_image_force_pull: "{{ authelia_container_image.endswith(':latest') }}"
+
+# The base container network. It will be auto-created by this role if it doesn't exist already.
+authelia_container_network: "{{ authelia_identifier }}"
+
+# A list of additional container networks that the container would be connected to.
+# The role does not create these networks, so make sure they already exist.
+# Use this to expose this container to another reverse proxy, which runs in a different container network.
+authelia_container_additional_networks: "{{ authelia_container_additional_networks_auto + authelia_container_additional_networks_custom }}"
+authelia_container_additional_networks_auto: []
+authelia_container_additional_networks_custom: []
+
+# authelia_container_labels_traefik_enabled controls whether labels to assist a Traefik reverse-proxy will be attached to the container.
+# See `../templates/labels.j2` for details.
+#
+# To inject your own other container labels, see `authelia_container_labels_additional_labels`.
+authelia_container_labels_traefik_enabled: true
+authelia_container_labels_traefik_docker_network: "{{ authelia_container_network }}"
+authelia_container_labels_traefik_hostname: "{{ authelia_hostname }}"
+# The path prefix must either be `/` or not end with a slash (e.g. `/authelia`).
+authelia_container_labels_traefik_path_prefix: "{{ authelia_path_prefix }}"
+authelia_container_labels_traefik_rule: "Host(`{{ authelia_container_labels_traefik_hostname }}`){% if authelia_container_labels_traefik_path_prefix != '/' %} && PathPrefix(`{{ authelia_container_labels_traefik_path_prefix }}`){% endif %}"
+authelia_container_labels_traefik_priority: 0
+authelia_container_labels_traefik_entrypoints: web-secure
+authelia_container_labels_traefik_tls: "{{ authelia_container_labels_traefik_entrypoints != 'web' }}"
+authelia_container_labels_traefik_tls_certResolver: default  # noqa var-naming
+
+authelia_container_labels_traefik_forwardAuth_address_rd: "{{ authelia_scheme }}://{{ authelia_hostname }}{{ authelia_path_prefix }}"
+
+# Controls which additional headers to attach to all HTTP responses.
+# To add your own headers, use `authelia_container_labels_traefik_additional_response_headers_custom`
+authelia_container_labels_traefik_additional_response_headers: "{{ authelia_container_labels_traefik_additional_response_headers_auto | combine(authelia_container_labels_traefik_additional_response_headers_custom) }}"
+authelia_container_labels_traefik_additional_response_headers_auto: |
+  {{
+    {}
+    | combine ({'X-XSS-Protection': authelia_http_header_xss_protection} if authelia_http_header_xss_protection else {})
+    | combine ({'X-Frame-Options': authelia_http_header_frame_options} if authelia_http_header_frame_options else {})
+    | combine ({'X-Content-Type-Options': authelia_http_header_content_type_options} if authelia_http_header_content_type_options else {})
+    | combine ({'Content-Security-Policy': authelia_http_header_content_security_policy} if authelia_http_header_content_security_policy else {})
+    | combine ({'Permission-Policy': authelia_http_header_content_permission_policy} if authelia_http_header_content_permission_policy else {})
+    | combine ({'Strict-Transport-Security': authelia_http_header_strict_transport_security} if authelia_http_header_strict_transport_security and authelia_container_labels_traefik_tls else {})
+  }}
+authelia_container_labels_traefik_additional_response_headers_custom: {}
+
+# authelia_container_labels_additional_labels contains a multiline string with additional labels to add to the container label file.
+# See `../templates/labels.j2` for details.
+#
+# Example:
+# authelia_container_labels_additional_labels: |
+#   my.label=1
+#   another.label="here"
+authelia_container_labels_additional_labels: ''
+
+# A list of extra arguments to pass to the container
+authelia_container_extra_arguments: []
+
+# Specifies how often the container health-check will run.
+#
+# For Traefik based setups, it's important that the interval is short,
+# because the interval value also specifies the "initial wait time".
+# This is a Docker (moby) bug: https://github.com/moby/moby/issues/33410
+# Without a successful healthcheck, Traefik will not register the service for reverse-proxying.
+# Thus, the health interval determines the initial start-up time -- the smaller, the better.
+#
+# For non-Traefik setups, we use the default healthcheck interval (30s) to decrease overhead.
+authelia_container_health_interval: "{{ '5s' if authelia_container_labels_traefik_enabled else '30s' }}"
+
+# List of systemd services that authelia.service depends on
+authelia_systemd_required_services_list: "{{ authelia_systemd_required_services_list_default + authelia_systemd_required_services_list_auto + authelia_systemd_required_services_list_custom }}"
+authelia_systemd_required_services_list_default: ['docker.service']
+authelia_systemd_required_services_list_auto: []
+authelia_systemd_required_services_list_custom: []
+
+# Specifies the value of the `X-XSS-Protection` header
+# Stops pages from loading when they detect reflected cross-site scripting (XSS) attacks.
+#
+# Learn more about it is here:
+# - https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-XSS-Protection
+# - https://portswigger.net/web-security/cross-site-scripting/reflected
+authelia_http_header_xss_protection: "1; mode=block"
+
+# Specifies the value of the `X-Frame-Options` header which controls whether framing can happen.
+# See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options
+authelia_http_header_frame_options: SAMEORIGIN
+
+# Specifies the value of the `X-Content-Type-Options` header.
+# See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options
+authelia_http_header_content_type_options: nosniff
+
+# Specifies the value of the `Content-Security-Policy` header.
+# See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy
+authelia_http_header_content_security_policy: frame-ancestors 'self'
+
+# Specifies the value of the `Permission-Policy` header.
+# See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Permission-Policy
+authelia_http_header_content_permission_policy: "{{ 'interest-cohort=()' if authelia_floc_optout_enabled else '' }}"
+
+# Specifies the value of the `Strict-Transport-Security` header.
+# See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security
+authelia_http_header_strict_transport_security: "max-age=31536000; includeSubDomains{{ '; preload' if authelia_hsts_preload_enabled else '' }}"
+
+# Controls whether to send a "Permissions-Policy interest-cohort=();" header along with all responses
+#
+# Learn more about what it is here:
+# - https://www.eff.org/deeplinks/2021/03/googles-floc-terrible-idea
+# - https://paramdeo.com/blog/opting-your-website-out-of-googles-floc-network
+# - https://amifloced.org/
+#
+# Of course, a better solution is to just stop using browsers (like Chrome), which participate in such tracking practices.
+# See: `authelia_content_permission_policy`
+authelia_floc_optout_enabled: true
+
+# Controls if HSTS preloading is enabled
+#
+# In its strongest and recommended form, the [HSTS policy](https://www.chromium.org/hsts) includes all subdomains, and
+# indicates a willingness to be "preloaded" into browsers:
+# `Strict-Transport-Security: max-age=31536000; includeSubDomains; preload`
+# For more information visit:
+# - https://en.wikipedia.org/wiki/HTTP_Strict_Transport_Security
+# - https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security
+# - https://hstspreload.org/#opt-in
+# See: `authelia_http_header_strict_transport_security`
+authelia_hsts_preload_enabled: false
+
+# Additional environment variables.
+# See: https://www.authelia.com/configuration/methods/environment/
+authelia_environment_variables_additional_variables: ''
+
+authelia_config_jwt_secret: ''
+
+authelia_config_default_redirection_url: "{{ authelia_scheme }}://{{ authelia_hostname }}{{ authelia_path_prefix }}"
+
+########################################################################
+#                                                                      #
+# Logging                                                              #
+#                                                                      #
+########################################################################
+
+# Valid values: info, debug, trace
+authelia_config_log_level: info
+
+# Valid values: json, text
+authelia_config_log_format: text
+
+########################################################################
+#                                                                      #
+# /Logging                                                             #
+#                                                                      #
+########################################################################
+
+
+########################################################################
+#                                                                      #
+# Session                                                              #
+#                                                                      #
+########################################################################
+
+# The "Session" configuration sections controls where and how authentication cookies are set.
+#
+# See: https://www.authelia.com/configuration/session/introduction/
+
+authelia_config_session_domain: ''
+authelia_config_session_secret: ''
+
+# Unless Redis information is specified, session information is stored in memory.
+# When session information is stored in memory, restarting the process will destroy all user sessions.
+authelia_config_session_redis_host: ''
+authelia_config_session_redis_port: 6379
+
+########################################################################
+#                                                                      #
+# /Session                                                             #
+#                                                                      #
+########################################################################
+
+
+########################################################################
+#                                                                      #
+# Storage Providers                                                    #
+#                                                                      #
+########################################################################
+
+# Authelia supports `local`, `mysql` and `postgres` storage providers.
+# Below, you can enable the one you need.
+# The local (SQLite) storage provider is enabled by default if you have not enabled another one.
+# Only one provider may be enabled at a given time.
+#
+# See: https://www.authelia.com/configuration/storage/introduction/
+
+# authelia_config_storage_encryption_key stores the encryption key that is used to encrypt sensitive information in the database.
+# It must be a string with a minimum length of 20.
+# Changing it subsequently will cause trouble.
+authelia_config_storage_encryption_key: ''
+
+# authelia_config_storage_local_path specifies the (in-container) path to a local file to use for the SQLite database.
+# If non-empty, the local storage provider will be used with the specified path.
+# Example: /data/db.sqlite3
+authelia_config_storage_local_path: "{{ '/data/db.sqlite3' if (authelia_config_storage_mysql_host == '' and authelia_config_storage_postgres_host == '') else '' }}"
+
+# authelia_config_storage_mysql_* variables specify where to reach the MySQL database.
+# If `authelia_config_storage_mysql_host` is specified, the MySQL storage provider will be enabled.
+authelia_config_storage_mysql_host: ''
+authelia_config_storage_mysql_port: 3306
+authelia_config_storage_mysql_database: authelia
+authelia_config_storage_mysql_username: authelia
+authelia_config_storage_mysql_password: ''
+
+# authelia_config_storage_postgres_* variables specify where to reach the Postgres database.
+# If `authelia_config_storage_postgres_host` is specified, the Postgres storage provider will be enabled.
+authelia_config_storage_postgres_host: ''
+authelia_config_storage_postgres_port: 5432
+authelia_config_storage_postgres_database: authelia
+authelia_config_storage_postgres_username: authelia
+authelia_config_storage_postgres_password: ''
+
+########################################################################
+#                                                                      #
+# /Storage Providers                                                   #
+#                                                                      #
+########################################################################
+
+
+########################################################################
+#                                                                      #
+# Filesystem-based email notifier                                      #
+#                                                                      #
+########################################################################
+
+# See:
+# - https://www.authelia.com/configuration/notifications/introduction/
+# - https://www.authelia.com/configuration/notifications/file/
+
+# Unless the SMTP notifier is enabled, we enable the filesystem-based notifier
+# and configure it to spew emails out to stdout, so that messages are visible in the logs (`journalctl -fu SERVICE_NAME`).
+#
+# To configure actual email-sending, see "SMTP-based email notifier".
+authelia_config_notifier_filesystem_filename: "{{ '/dev/stdout' if authelia_config_notifier_smtp_host == '' else '' }}"
+
+########################################################################
+#                                                                      #
+# /Filesystem-based email notifier                                     #
+#                                                                      #
+########################################################################
+
+
+########################################################################
+#                                                                      #
+# SMTP-based email notifier                                            #
+#                                                                      #
+########################################################################
+
+# See:
+# - https://www.authelia.com/configuration/notifications/introduction/
+# - https://www.authelia.com/configuration/notifications/smtp/
+
+# Configure these settings to make Authelia send actual emails for notifying.
+#
+# Alternatively, see "Filesystem-based email notifier" which is enabled by default
+# when SMTP-sending is not configured.
+
+authelia_config_notifier_smtp_host: ''
+authelia_config_notifier_smtp_port: 587
+authelia_config_notifier_smtp_username: ''
+authelia_config_notifier_smtp_password: ''
+authelia_config_notifier_smtp_sender: "Authelia <admin@example.com>"
+authelia_config_notifier_smtp_identifier: "{{ authelia_hostname }}"
+
+########################################################################
+#                                                                      #
+# /SMTP-based email notifier                                           #
+#                                                                      #
+########################################################################
+
+
+########################################################################
+#                                                                      #
+# LDAP authentication backend                                          #
+#                                                                      #
+########################################################################
+
+# To enable LDAP authentication, specify the `authelia_config_authentication_backend_ldap_url`
+# and possibly other `authelia_config_authentication_backend_ldap_*` variables.
+#
+# See: https://www.authelia.com/configuration/first-factor/ldap/
+#
+# Alternatively, see "File-based authentication backend".
+
+# Valid choices: activedirectory, custom
+authelia_config_authentication_backend_ldap_implementation: custom
+# Example: ldap://1.2.3.4
+authelia_config_authentication_backend_ldap_url: ''
+# Example: dc=example,dc=com
+authelia_config_authentication_backend_ldap_base_dn: ''
+authelia_config_authentication_backend_ldap_username_attribute: uid
+authelia_config_authentication_backend_ldap_additional_users_dn: ou=users
+authelia_config_authentication_backend_ldap_users_filter: "(&({username_attribute}={input})(objectClass=person))"
+authelia_config_authentication_backend_ldap_additional_groups_dn: ou=groups
+authelia_config_authentication_backend_ldap_groups_filter: "(&(member={dn})(objectClass=groupOfNames))"
+authelia_config_authentication_backend_ldap_group_name_attribute: cn
+authelia_config_authentication_backend_ldap_mail_attribute: mail
+authelia_config_authentication_backend_ldap_display_name_attribute: displayName
+# Example: cn=admin,dc=example,dc=com
+authelia_config_authentication_backend_ldap_user: ''
+authelia_config_authentication_backend_ldap_password: ''
+
+########################################################################
+#                                                                      #
+# /LDAP authentication backend                                         #
+#                                                                      #
+########################################################################
+
+
+########################################################################
+#                                                                      #
+# File-based authentication backend                                    #
+#                                                                      #
+########################################################################
+
+# To enable the file-based authentication backend, specify `authelia_config_authentication_backend_file_path`.
+#
+# See: https://www.authelia.com/configuration/first-factor/file/
+#
+# Alternatively, see "LDAP authentication backend".
+
+# authelia_config_authentication_backend_file_path specifies the in-container path to the user database.
+# Example: /data/users.yml
+authelia_config_authentication_backend_file_path: "{{ '' if authelia_config_authentication_backend_file_content == '' else '/config/users.yml' }}"
+
+authelia_config_authentication_backend_file_watch: true
+
+# If `authelia_config_authentication_backend_file_content` is specified, the users database will be managed by the playbook
+# and the contents specified in this variable will be stored in `authelia_config_user_database_path`.
+authelia_config_authentication_backend_file_content: ''
+
+########################################################################
+#                                                                      #
+# /File-based authentication backend                                   #
+#                                                                      #
+########################################################################
+
+
+########################################################################
+#                                                                      #
+# Access Control Configuration                                         #
+#                                                                      #
+########################################################################
+
+# The "Access Control Configuration" configures Authelia's forward-auth authentication support.
+# For OpenID Connect, see the "OpenID Connect" section instead.
+#
+# See: https://www.authelia.com/configuration/security/access-control/
+
+# authelia_config_access_control_default_policy specifies the default policy
+# unless some other rule (see `authelia_config_access_control_rules`) overrides it.
+authelia_config_access_control_default_policy: one_factor
+
+# authelia_config_access_control_networks defines some named networks that you can refer to in your rules (`authelia_config_access_control_rules`).
+#
+# Example:
+# authelia_config_access_control_networks:
+#   - name: internal
+#     networks:
+#       - 10.10.0.0/16
+#       - 192.168.2.0/24
+#   - name: VPN
+#     networks: 10.9.0.0/16
+authelia_config_access_control_networks: []
+
+# Example:
+# authelia_config_access_control_rules:
+#  # Rules applied to everyone
+#  - domain: 'public.example.com'
+#    policy: bypass
+#
+#  # Domain Regex examples. Generally we recommend just using a standard domain.
+#  - domain_regex: '^(?P<User>\w+)\.example\.com$'
+#    policy: one_factor
+#  - domain_regex: '^(?P<Group>\w+)\.example\.com$'
+#    policy: one_factor
+#  - domain_regex:
+#      - '^appgroup-.*\.example\.com$'
+#      - '^appgroup2-.*\.example\.com$'
+#    policy: one_factor
+#  - domain_regex: '^.*\.example\.com$'
+#    policy: two_factor
+#
+#  - domain: 'secure.example.com'
+#    policy: one_factor
+#  # Network based rule, if not provided any network matches.
+#    networks:
+#      - internal
+#      - VPN
+#      - 192.168.1.0/24
+#      - 10.0.0.1
+#
+#  - domain:
+#      - 'secure.example.com'
+#      - 'private.example.com'
+#    policy: two_factor
+#
+#  - domain: 'singlefactor.example.com'
+#    policy: one_factor
+#
+#  # Rules applied to 'admins' group
+#  - domain: 'mx2.mail.example.com'
+#    subject: 'group:admins'
+#    policy: deny
+#
+#  - domain: '*.example.com'
+#    subject:
+#      - 'group:admins'
+#      - 'group:moderators'
+#    policy: two_factor
+#
+#  # Rules applied to 'dev' group
+#  - domain: 'dev.example.com'
+#    resources:
+#      - '^/groups/dev/.*$'
+#    subject: 'group:dev'
+#    policy: two_factor
+#
+#  # Rules applied to user 'john'
+#  - domain: 'dev.example.com'
+#    resources:
+#      - '^/users/john/.*$'
+#    subject: 'user:john'
+#    policy: two_factor
+#
+#  # Rules applied to user 'harry'
+#  - domain: 'dev.example.com'
+#    resources:
+#      - '^/users/harry/.*$'
+#    subject: 'user:harry'
+#    policy: two_factor
+#
+#  # Rules applied to user 'bob'
+#  - domain: '*.mail.example.com'
+#    subject: 'user:bob'
+#    policy: two_factor
+#  - domain: 'dev.example.com'
+#    resources:
+#      - '^/users/bob/.*$'
+#    subject: 'user:bob'
+#    policy: two_factor
+authelia_config_access_control_rules: []
+
+########################################################################
+#                                                                      #
+# /Access Control Configuration                                        #
+#                                                                      #
+########################################################################
+
+
+########################################################################
+#                                                                      #
+# OpenID Connect                                                       #
+#                                                                      #
+########################################################################
+
+# To enable OpenID Connect support:
+# - specify at least one client in `authelia_config_identity_providers_oidc_clients`
+# - specify `authelia_config_identity_providers_oidc_issuer_private_key`
+
+# authelia_config_identity_providers_oidc_clients holds the list of OpenID Connect client applications.
+# If at least one client application is defined in the list, OpenID Connect support will be enabled in the Authelia configuration.
+#
+# Example (from https://www.authelia.com/integration/openid-connect/grafana/):
+#
+# authelia_config_identity_providers_oidc_clients:
+#   - id: grafana
+#     description: Grafana
+#     secret: '$pbkdf2-sha512$310000$c8p78n7pUMln0jzvd4aK4Q$JNRBzwAo0ek5qKn50cFzzvE9RXV88h1wJn5KGiHrD0YKtZaR/nCb2CJPOsKaPK0hjf.9yHxzQGZziziccp6Yng'  # The digest of 'insecure_secret'.
+#     public: false
+#     authorization_policy: two_factor
+#     redirect_uris:
+#       - https://grafana.example.com/login/generic_oauth
+#     scopes:
+#       - openid
+#       - profile
+#       - groups
+#       - email
+#     userinfo_signing_algorithm: none
+authelia_config_identity_providers_oidc_clients: []
+
+# authelia_config_identity_providers_oidc_hmac_secret is used to sign OAuth2 tokens (authorization code, access tokens and refresh tokens).
+# It's not required, but setting it is recommended.
+authelia_config_identity_providers_oidc_hmac_secret: ''
+
+# authelia_config_identity_providers_oidc_issuer_private_key is used to sign the JWT forged by OpenID Connect.
+#
+# Generate it using: `openssl genpkey -algorithm RSA -out FILE_NAME`.
+# The generated key may start with `BEGIN PRIVATE KEY`, not `BEGIN RSA PRIVATE KEY` - that's OK.
+#
+# Example:
+# authelia_config_identity_providers_oidc_issuer_private_key: |
+#   -----BEGIN RSA PRIVATE KEY-----
+#   MIIEpAIBAAKCAQEA8q/elLI/ijMYSJUsnXh0hYUIQYSCrtZQwjRJlmpADYgPQvn1
+#   T9D9SzLLu4L2B8xTM4NOkA22Q6MVBxACzGVHUU6NUGtflCCNK9fBtCfcO3AwDtdZ
+#   KXou5jHasFhKUxI3lRlCb9HEy1d8srZvnVaAQRgMWL6cQJKorNHhHnh44+QERZF+
+#   +5j3UAyOWGmK+Dx7glaSrgtVBQpuaIVjAh0rxdCI3huVj1bBfAkVizmxD9RgzAEW
+#   LQeRY6HsYSN/GChQ49q4i55lIxKVCnvOoAff03RlJhvpxLQ2mPntChZlJjdqTzt5
+#   txE1/isK9ktvLsug3upgIrGYJoMPfHb41ilYfwIDAQABAoIBAQDTOdFf2JjHH1um
+#   aPgRAvNf9v7Nj5jytaRKs5nM6iNf46ls4QPreXnMhqSeSwj6lpNgBYxOgzC9Q+cc
+#   Y4ob/paJJPaIJTxmP8K/gyWcOQlNToL1l+eJ20eQoZm23NGr5fIsunSBwLEpTrdB
+#   ENqqtcwhW937K8Pxy/Q1nuLyU2bc6Tn/ivLozc8n27dpQWWKh8537VY7ancIaACr
+#   LJJLYxKqhQpjtBWAyCDvZQirnAOm9KnvIHaGXIswCZ4Xbsu0Y9NL+woARPyRVQvG
+#   jfxy4EmO9s1s6y7OObSukwKDSNihAKHx/VIbvVWx8g2Lv5fGOa+J2Y7o9Qurs8t5
+#   BQwMTt0BAoGBAPUw5Z32EszNepAeV3E2mPFUc5CLiqAxagZJuNDO2pKtyN29ETTR
+#   Ma4O1cWtGb6RqcNNN/Iukfkdk27Q5nC9VJSUUPYelOLc1WYOoUf6oKRzE72dkMQV
+#   R4bf6TkjD+OVR17fAfkswkGahZ5XA7j48KIQ+YC4jbnYKSxZTYyKPjH/AoGBAP1i
+#   tqXt36OVlP+y84wWqZSjMelBIVa9phDVGJmmhz3i1cMni8eLpJzWecA3pfnG6Tm9
+#   ze5M4whASleEt+M00gEvNaU9ND+z0wBfi+/DwJYIbv8PQdGrBiZFrPhTPjGQUldR
+#   lXccV2meeLZv7TagVxSi3DO6dSJfSEHyemd5j9mBAoGAX8Hv+0gOQZQCSOTAq8Nx
+#   6dZcp9gHlNaXnMsP9eTDckOSzh636JPGvj6m+GPJSSbkURUIQ3oyokMNwFqvlNos
+#   fTaLhAOfjBZI9WnDTTQxpugWjphJ4HqbC67JC/qIiw5S6FdaEvGLEEoD4zoChywZ
+#   9oGAn+fz2d/0/JAH/FpFPgsCgYEAp/ipZgPzziiZ9ov1wbdAQcWRj7RaWnssPFpX
+#   jXwEiXT3CgEMO4MJ4+KWIWOChrti3qFBg6i6lDyyS6Qyls7sLFbUdC7HlTcrOEMe
+#   rBoTcCI1GqZNlqWOVQ65ZIEiaI7o1vPBZo2GMQEZuq8mDKFsOMThvvTrM5cAep84
+#   n6HJR4ECgYABWcbsSnr0MKvVth/inxjbKapbZnp2HUCuw87Ie5zK2Of/tbC20wwk
+#   yKw3vrGoE3O1t1g2m2tn8UGGASeZ842jZWjIODdSi5+icysQGuULKt86h/woz2SQ
+#   27GoE2i5mh6Yez6VAYbUuns3FcwIsMyWLq043Tu2DNkx9ijOOAuQzw^invalid..
+#   DO NOT USE==
+#   -----END RSA PRIVATE KEY-----
+authelia_config_identity_providers_oidc_issuer_private_key: ''
+
+########################################################################
+#                                                                      #
+# /OpenID Connect                                                      #
+#                                                                      #
+########################################################################
+
+
+# Default Authelia configuration template which covers the generic use case.
+# You can customize it by controlling the various variables inside it.
+#
+# For a more advanced customization, you can extend the default (see `authelia_configuration_extension_yaml`)
+# or completely replace this variable with your own template.
+authelia_configuration_yaml: "{{ lookup('template', 'templates/configuration.yml.j2') }}"
+
+authelia_configuration_extension_yaml: |
+  # Your custom YAML configuration for Authelia goes here.
+  # This configuration extends the default starting configuration (`authelia_configuration_yaml`).
+  #
+  # You can override individual variables from the default configuration, or introduce new ones.
+  #
+  # If you need something more special, you can take full control by
+  # completely redefining `authelia_configuration_yaml`.
+  #
+  # Example configuration extension follows:
+  #
+  # theme: dark
+  # server:
+  #  enable_pprof: true
+
+authelia_configuration_extension: "{{ authelia_configuration_extension_yaml | from_yaml if authelia_configuration_extension_yaml | from_yaml is mapping else {} }}"
+
+# Holds the final Authelia configuration (a combination of the default and its extension).
+# You most likely don't need to touch this variable. Instead, see `authelia_configuration_yaml`.
+authelia_configuration: "{{ authelia_configuration_yaml | from_yaml | combine(authelia_configuration_extension, recursive=True) }}"

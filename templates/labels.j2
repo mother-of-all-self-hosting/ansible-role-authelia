@@ -1,0 +1,52 @@
+{% if authelia_container_labels_traefik_enabled %}
+traefik.enable=true
+
+{% if authelia_container_labels_traefik_docker_network %}
+traefik.docker.network={{ authelia_container_labels_traefik_docker_network }}
+{% endif %}
+
+{% set middlewares = [] %}
+
+{% if authelia_container_labels_traefik_path_prefix != '/' %}
+traefik.http.middlewares.{{ authelia_identifier }}-slashless-redirect.redirectregex.regex=({{ authelia_container_labels_traefik_path_prefix | quote }})$
+traefik.http.middlewares.{{ authelia_identifier }}-slashless-redirect.redirectregex.replacement=${1}/
+{% set middlewares = middlewares + [authelia_identifier + '-slashless-redirect'] %}
+{% endif %}
+
+{% if authelia_container_labels_traefik_path_prefix != '/' %}
+traefik.http.middlewares.{{ authelia_identifier }}-strip-prefix.stripprefix.prefixes={{ authelia_container_labels_traefik_path_prefix }}
+{% set middlewares = middlewares + [authelia_identifier + '-strip-prefix'] %}
+{% endif %}
+
+{% if authelia_container_labels_traefik_additional_response_headers.keys() | length > 0 %}
+{% for name, value in authelia_container_labels_traefik_additional_response_headers.items() %}
+traefik.http.middlewares.{{ authelia_identifier }}-add-headers.headers.customresponseheaders.{{ name }}={{ value }}
+{% endfor %}
+{% set middlewares = middlewares + [authelia_identifier + '-add-headers'] %}
+{% endif %}
+
+traefik.http.routers.{{ authelia_identifier }}.rule={{ authelia_container_labels_traefik_rule }}
+{% if authelia_container_labels_traefik_priority | int > 0 %}
+traefik.http.routers.{{ authelia_identifier }}.priority={{ authelia_container_labels_traefik_priority }}
+{% endif %}
+traefik.http.routers.{{ authelia_identifier }}.service={{ authelia_identifier }}
+{% if middlewares | length > 0 %}
+traefik.http.routers.{{ authelia_identifier }}.middlewares={{ middlewares | join(',') }}
+{% endif %}
+traefik.http.routers.{{ authelia_identifier }}.entrypoints={{ authelia_container_labels_traefik_entrypoints }}
+traefik.http.routers.{{ authelia_identifier }}.tls={{ authelia_container_labels_traefik_tls | to_json }}
+{% if authelia_container_labels_traefik_tls %}
+traefik.http.routers.{{ authelia_identifier }}.tls.certResolver={{ authelia_container_labels_traefik_tls_certResolver }}
+{% endif %}
+
+traefik.http.services.{{ authelia_identifier }}.loadbalancer.server.port=9091
+
+traefik.http.middlewares.{{ authelia_identifier }}.forwardAuth.address=http://{{ authelia_identifier }}:9091/api/verify?rd={{ authelia_container_labels_traefik_forwardAuth_address_rd | urlencode | replace("/", "%2F") }}
+traefik.http.middlewares.{{ authelia_identifier }}.forwardAuth.trustForwardHeader=true
+traefik.http.middlewares.{{ authelia_identifier }}.forwardAuth.authResponseHeaders=Remote-User,Remote-Groups,Remote-Name,Remote-Email
+traefik.http.middlewares.{{ authelia_identifier }}-basic.forwardAuth.address=http://{{ authelia_identifier }}:9091/api/verify?auth=basic
+traefik.http.middlewares.{{ authelia_identifier }}-basic.forwardAuth.trustForwardHeader=true
+traefik.http.middlewares.{{ authelia_identifier }}-basic.forwardAuth.authResponseHeaders=Remote-User,Remote-Groups,Remote-Name,Remote-Email
+{% endif %}
+
+{{ authelia_container_labels_additional_labels }}

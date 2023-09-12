@@ -1,0 +1,47 @@
+#jinja2: lstrip_blocks: "True"
+[Unit]
+Description=Authelia ({{ authelia_identifier }})
+{% for service in authelia_systemd_required_services_list %}
+Requires={{ service }}
+After={{ service }}
+{% endfor %}
+DefaultDependencies=no
+
+[Service]
+Type=simple
+Environment="HOME={{ devture_systemd_docker_base_systemd_unit_home_path }}"
+ExecStartPre=-{{ devture_systemd_docker_base_host_command_sh }} -c '{{ devture_systemd_docker_base_host_command_docker }} kill {{ authelia_identifier }} 2>/dev/null || true'
+ExecStartPre=-{{ devture_systemd_docker_base_host_command_sh }} -c '{{ devture_systemd_docker_base_host_command_docker }} rm {{ authelia_identifier }} 2>/dev/null || true'
+
+ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} create \
+			--rm \
+			--name={{ authelia_identifier }} \
+			--log-driver=none \
+			--user={{ authelia_uid }}:{{ authelia_gid }} \
+			--cap-drop=ALL \
+			--network={{ authelia_container_network }} \
+			--env-file={{ authelia_base_path }}/env \
+			--label-file={{ authelia_base_path }}/labels \
+			--mount type=bind,src={{ authelia_config_path }},dst=/config,ro \
+			--mount type=bind,src={{ authelia_data_path }},dst=/data \
+			--health-interval={{ authelia_container_health_interval }} \
+			{% for arg in authelia_container_extra_arguments %}
+			{{ arg }} \
+			{% endfor %}
+			{{ authelia_container_image }}
+
+{% for network in authelia_container_additional_networks %}
+ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} network connect {{ network }} {{ authelia_identifier }}
+{% endfor %}
+
+ExecStart={{ devture_systemd_docker_base_host_command_docker }} start --attach {{ authelia_identifier }}
+
+ExecStop=-{{ devture_systemd_docker_base_host_command_sh }} -c '{{ devture_systemd_docker_base_host_command_docker }} kill {{ authelia_identifier }} 2>/dev/null || true'
+ExecStop=-{{ devture_systemd_docker_base_host_command_sh }} -c '{{ devture_systemd_docker_base_host_command_docker }} rm {{ authelia_identifier }} 2>/dev/null || true'
+
+Restart=always
+RestartSec=30
+SyslogIdentifier={{ authelia_identifier }}
+
+[Install]
+WantedBy=multi-user.target

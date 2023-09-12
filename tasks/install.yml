@@ -1,0 +1,70 @@
+---
+
+- name: Ensure authelia paths exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: 0750
+    owner: "{{ authelia_uid }}"
+    group: "{{ authelia_gid }}"
+  with_items:
+    - "{{ authelia_base_path }}"
+    - "{{ authelia_config_path }}"
+    - "{{ authelia_data_path }}"
+
+- name: Ensure authelia support files installed
+  ansible.builtin.template:
+    src: "{{ role_path }}/templates/{{ item }}.j2"
+    dest: "{{ authelia_base_path }}/{{ item }}"
+    mode: 0640
+    owner: "{{ authelia_uid }}"
+    group: "{{ authelia_gid }}"
+  with_items:
+    - env
+    - labels
+
+- name: Ensure authelia config installed
+  ansible.builtin.copy:
+    content: "{{ authelia_configuration | to_nice_yaml(indent=2, width=999999) }}"
+    dest: "{{ authelia_config_path }}/configuration.yml"
+    mode: 0640
+    owner: "{{ authelia_uid }}"
+    group: "{{ authelia_gid }}"
+
+- when: authelia_config_authentication_backend_file_content != ''
+  name: Ensure authelia user database installed
+  ansible.builtin.copy:
+    # We intentionally parse and reformat YAML to ensure it's valid and potentially choke early (during playbook run).
+    content: "{{ authelia_config_authentication_backend_file_content | from_yaml | to_nice_yaml(indent=2, width=999999) }}"
+    dest: "{{ authelia_config_user_database_path }}"
+    mode: 0640
+    owner: "{{ authelia_uid }}"
+    group: "{{ authelia_gid }}"
+
+- when: authelia_config_authentication_backend_file_content == ''
+  name: Ensure authelia user database purged
+  ansible.builtin.file:
+    path: "{{ authelia_config_user_database_path }}"
+    state: absent
+
+- name: Ensure authelia container image is pulled
+  community.docker.docker_image:
+    name: "{{ authelia_container_image }}"
+    source: "{{ 'pull' if ansible_version.major > 2 or ansible_version.minor > 7 else omit }}"
+    force_source: "{{ authelia_container_image_force_pull if ansible_version.major > 2 or ansible_version.minor >= 8 else omit }}"
+    force: "{{ omit if ansible_version.major > 2 or ansible_version.minor >= 8 else authelia_container_image_force_pull }}"
+  register: result
+  retries: "{{ devture_playbook_help_container_retries_count }}"
+  delay: "{{ devture_playbook_help_container_retries_delay }}"
+  until: result is not failed
+
+- name: Ensure authelia container network is created
+  community.general.docker_network:
+    name: "{{ authelia_container_network }}"
+    driver: bridge
+
+- name: Ensure authelia systemd service is present
+  ansible.builtin.template:
+    src: "{{ role_path }}/templates/systemd/authelia.service.j2"
+    dest: "{{ devture_systemd_docker_base_systemd_path }}/{{ authelia_identifier }}.service"
+    mode: 0644
