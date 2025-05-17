@@ -19,6 +19,7 @@ authelia_hostname: ''
 # As of right now, Authelia cannot be hosted at a subpath, so this can only possibly be set to `/`.
 authelia_path_prefix: /
 
+# renovate: datasource=docker depName=authelia/authelia
 authelia_version: 4.37.5
 
 authelia_base_path: "/{{ authelia_identifier }}"
