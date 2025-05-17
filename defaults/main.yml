@@ -20,7 +20,7 @@ authelia_hostname: ''
 authelia_path_prefix: /
 
 # renovate: datasource=docker depName=authelia/authelia
-authelia_version: 4.37.5
+authelia_version: 4.39.3
 
 authelia_base_path: "/{{ authelia_identifier }}"
 authelia_config_path: "{{ authelia_base_path }}/config"
