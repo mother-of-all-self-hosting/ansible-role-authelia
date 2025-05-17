@@ -14,12 +14,12 @@
         enabled: false
         daemon_reload: true
 
-    - name: Ensure authelia systemd service does not exists
+    - name: Ensure authelia systemd service does not exist
       ansible.builtin.file:
         path: "{{ devture_systemd_docker_base_systemd_path }}/{{ authelia_identifier }}.service"
         state: absent
 
-    - name: Ensure authelia path doesn't exist
+    - name: Ensure authelia path does not exist
       ansible.builtin.file:
         path: "{{ authelia_base_path }}"
         state: absent
