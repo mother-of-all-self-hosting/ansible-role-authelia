@@ -1,9 +1,17 @@
+# SPDX-FileCopyrightText: 2023 Slavi Pantaleev
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 ---
-- block:
-    - when: authelia_enabled | bool
+
+- name: Perform Authelia installation tasks
+  block:
+    - name: Validate Authelia configuration
+      when: authelia_enabled | bool
       ansible.builtin.include_tasks: "{{ role_path }}/tasks/validate_config.yml"
 
-    - when: authelia_enabled | bool
+    - name: Install Authelia
+      when: authelia_enabled | bool
       ansible.builtin.include_tasks: "{{ role_path }}/tasks/install.yml"
   tags:
     - setup-all
@@ -11,8 +19,10 @@
     - install-all
     - install-authelia
 
-- block:
-    - when: not authelia_enabled | bool
+- name: Perform Authelia uninstallation tasks
+  block:
+    - name: Uninstall Authelia
+      when: not authelia_enabled | bool
       ansible.builtin.include_tasks: "{{ role_path }}/tasks/uninstall.yml"
   tags:
     - setup-all
