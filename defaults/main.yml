@@ -102,7 +102,7 @@ authelia_container_health_interval: "{{ '5s' if authelia_container_labels_traefi
 
 # List of systemd services that authelia.service depends on
 authelia_systemd_required_services_list: "{{ authelia_systemd_required_services_list_default + authelia_systemd_required_services_list_auto + authelia_systemd_required_services_list_custom }}"
-authelia_systemd_required_services_list_default: ['docker.service']
+authelia_systemd_required_services_list_default: "{{ [devture_systemd_docker_base_docker_service_name] if devture_systemd_docker_base_docker_service_name else [] }}"
 authelia_systemd_required_services_list_auto: []
 authelia_systemd_required_services_list_custom: []
 
