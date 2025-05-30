@@ -22,7 +22,7 @@ authelia_config_user_database_path: "{{ authelia_config_path }}/users.yml"
 authelia_data_path: "{{ authelia_base_path }}/data"
 
 # renovate: datasource=docker depName=authelia/authelia
-authelia_version: 4.37.5
+authelia_version: 4.39.4
 
 authelia_uid: ''
 authelia_gid: ''
