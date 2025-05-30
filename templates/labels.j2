@@ -47,7 +47,7 @@ traefik.http.routers.{{ authelia_identifier }}.tls.certResolver={{ authelia_cont
 
 traefik.http.services.{{ authelia_identifier }}.loadbalancer.server.port=9091
 
-traefik.http.middlewares.{{ authelia_identifier }}.forwardAuth.address=http://{{ authelia_identifier }}:9091/api/verify?rd={{ authelia_container_labels_traefik_forwardAuth_address_rd | urlencode | replace("/", "%2F") }}
+traefik.http.middlewares.{{ authelia_identifier }}.forwardAuth.address=http://{{ authelia_identifier }}:9091/api/verify?rd={{ authelia_container_labels_traefik_forwardauth_address_rd | urlencode | replace("/", "%2F") }}
 traefik.http.middlewares.{{ authelia_identifier }}.forwardAuth.trustForwardHeader=true
 traefik.http.middlewares.{{ authelia_identifier }}.forwardAuth.authResponseHeaders=Remote-User,Remote-Groups,Remote-Name,Remote-Email
 traefik.http.middlewares.{{ authelia_identifier }}-basic.forwardAuth.address=http://{{ authelia_identifier }}:9091/api/verify?auth=basic

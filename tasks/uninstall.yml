@@ -3,13 +3,13 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 ---
-
 - name: Check existence of Authelia systemd service
   ansible.builtin.stat:
     path: "{{ devture_systemd_docker_base_systemd_path }}/{{ authelia_identifier }}.service"
   register: authelia_service_stat
 
-- when: authelia_service_stat.stat.exists | bool
+- name: Uninstall Authelia systemd services and files
+  when: authelia_service_stat.stat.exists | bool
   block:
     - name: Ensure Authelia systemd service is stopped
       ansible.builtin.service:

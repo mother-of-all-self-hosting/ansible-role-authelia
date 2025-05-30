@@ -3,12 +3,11 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 ---
-
 - name: Ensure Authelia paths exist
   ansible.builtin.file:
     path: "{{ item }}"
     state: directory
-    mode: 0750
+    mode: "0750"
     owner: "{{ authelia_uid }}"
     group: "{{ authelia_gid }}"
   with_items:
@@ -20,7 +19,7 @@
   ansible.builtin.template:
     src: "{{ role_path }}/templates/{{ item }}.j2"
     dest: "{{ authelia_base_path }}/{{ item }}"
-    mode: 0640
+    mode: "0640"
     owner: "{{ authelia_uid }}"
     group: "{{ authelia_gid }}"
   with_items:
@@ -31,22 +30,22 @@
   ansible.builtin.copy:
     content: "{{ authelia_configuration | to_nice_yaml(indent=2, width=999999) }}"
     dest: "{{ authelia_config_path }}/configuration.yml"
-    mode: 0640
+    mode: "0640"
     owner: "{{ authelia_uid }}"
     group: "{{ authelia_gid }}"
 
-- when: authelia_config_authentication_backend_file_content != ''
-  name: Ensure Authelia user database installed
+- name: Ensure Authelia user database installed
+  when: authelia_config_authentication_backend_file_content != ''
   ansible.builtin.copy:
     # We intentionally parse and reformat YAML to ensure it's valid and potentially choke early (during playbook run).
     content: "{{ authelia_config_authentication_backend_file_content | from_yaml | to_nice_yaml(indent=2, width=999999) }}"
     dest: "{{ authelia_config_user_database_path }}"
-    mode: 0640
+    mode: "0640"
     owner: "{{ authelia_uid }}"
     group: "{{ authelia_gid }}"
 
-- when: authelia_config_authentication_backend_file_content == ''
-  name: Ensure Authelia user database purged
+- name: Ensure Authelia user database purged
+  when: authelia_config_authentication_backend_file_content == ''
   ansible.builtin.file:
     path: "{{ authelia_config_user_database_path }}"
     state: absent
@@ -73,4 +72,4 @@
   ansible.builtin.template:
     src: "{{ role_path }}/templates/systemd/authelia.service.j2"
     dest: "{{ devture_systemd_docker_base_systemd_path }}/{{ authelia_identifier }}.service"
-    mode: 0644
+    mode: "0644"

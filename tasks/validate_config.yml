@@ -3,6 +3,14 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 ---
+- name: (Deprecation) Catch and report renamed settings
+  ansible.builtin.fail:
+    msg: >-
+      Your configuration contains a variable, which now has a different name.
+      Please change your configuration to rename the variable (`{{ item.old }}` -> `{{ item.new }}`).
+  when: "item.old in vars"
+  with_items:
+    - { "old": "authelia_container_labels_traefik_forwardAuth_address_rd", "new": "authelia_container_labels_traefik_forwardauth_address_rd" }
 
 - name: Fail if required Authelia settings not defined
   ansible.builtin.fail:
@@ -22,12 +30,12 @@
     - authelia_config_storage_encryption_key
 
 - name: Fail if encryption key is too short
-  fail:
+  ansible.builtin.fail:
     msg: "authelia_config_storage_encryption_key needs to be 20 chars or more"
   when: authelia_config_storage_encryption_key | length < 20
 
 - name: Fail if no notifier is enabled
-  fail:
+  ansible.builtin.fail:
     msg: >-
       Authelia requires either the SMTP notifier or filesystem-based notifier configured.
       You need to set either `authelia_config_notifier_filesystem_filename` or
@@ -37,7 +45,7 @@
 # We only check that at least one authentication backend is enabled.
 # Enabling multiple will cause a problem at runtime, but our validation logic does not cover this edge case.
 - name: Fail if not authentication_backend is enabled
-  fail:
+  ansible.builtin.fail:
     msg: >-
       Authelia requires either the LDAP authentication backend or the file-based authentication backend to be configured.
       You need to set either `authelia_config_authentication_backend_file_path` or
@@ -47,7 +55,7 @@
 # We only check that at least one storage provider is enabled.
 # Enabling multiple will cause a problem at runtime, but our validation logic does not cover this edge case.
 - name: Fail if no storage provider is enabled
-  fail:
+  ansible.builtin.fail:
     msg: >-
       Authelia requires that one storage provider by enabled.
       You need to set either `authelia_config_storage_local_path` or
@@ -56,20 +64,21 @@
   when: "authelia_config_authentication_backend_file_path == '' and authelia_config_storage_mysql_host == '' and authelia_config_storage_postgres_host == ''"
 
 - name: Fail if OpenID Connect enabled, but required authelia_config_identity_providers_oidc_issuer_private_key is not set
-  fail:
+  ansible.builtin.fail:
     msg: |
       Your configuration defines at least one OpenID Connect client in `authelia_config_identity_providers_oidc_clients`, so OpenID Connect support is enabled.
       Authelia requires `authelia_config_identity_providers_oidc_issuer_private_key` to be specified when OpenID Connect is enabled.
   when: "authelia_config_identity_providers_oidc_clients | length > 0 and authelia_config_identity_providers_oidc_issuer_private_key == ''"
 
 - name: Fail if path prefix is not /
-  fail:
+  ansible.builtin.fail:
     msg: >-
       Authelia does not support being hosted at a subpath right now.
       authelia_path_prefix must be set to `/`.
   when: "authelia_path_prefix != '/'"
 
-- when: authelia_container_labels_traefik_enabled | bool
+- name: Run if Traefik is enabled
+  when: authelia_container_labels_traefik_enabled | bool
   block:
     - name: Fail if required Authelia Traefik settings not defined
       ansible.builtin.fail:

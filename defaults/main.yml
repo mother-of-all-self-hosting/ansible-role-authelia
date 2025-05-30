@@ -69,7 +69,7 @@ authelia_container_labels_traefik_entrypoints: web-secure
 authelia_container_labels_traefik_tls: "{{ authelia_container_labels_traefik_entrypoints != 'web' }}"
 authelia_container_labels_traefik_tls_certResolver: default  # noqa var-naming
 
-authelia_container_labels_traefik_forwardAuth_address_rd: "{{ authelia_scheme }}://{{ authelia_hostname }}{{ authelia_path_prefix }}"
+authelia_container_labels_traefik_forwardauth_address_rd: "{{ authelia_scheme }}://{{ authelia_hostname }}{{ authelia_path_prefix }}"
 
 # Controls which additional headers to attach to all HTTP responses.
 # To add your own headers, use `authelia_container_labels_traefik_additional_response_headers_custom`
