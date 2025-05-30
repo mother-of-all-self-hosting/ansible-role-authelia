@@ -15,10 +15,10 @@ authelia_gid: ''
 
 authelia_scheme: https
 
-# The hostname at which authelia is served.
+# The hostname at which Authelia is served.
 authelia_hostname: ''
 
-# The path at which authelia is served.
+# The path at which Authelia is served.
 # This value must either be `/` or not end with a slash (e.g. `/authelia`).
 # As of right now, Authelia cannot be hosted at a subpath, so this can only possibly be set to `/`.
 authelia_path_prefix: /

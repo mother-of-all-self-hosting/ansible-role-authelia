@@ -4,7 +4,7 @@
 
 ---
 
-- name: Ensure authelia paths exist
+- name: Ensure Authelia paths exist
   ansible.builtin.file:
     path: "{{ item }}"
     state: directory
@@ -16,7 +16,7 @@
     - "{{ authelia_config_path }}"
     - "{{ authelia_data_path }}"
 
-- name: Ensure authelia support files installed
+- name: Ensure Authelia support files installed
   ansible.builtin.template:
     src: "{{ role_path }}/templates/{{ item }}.j2"
     dest: "{{ authelia_base_path }}/{{ item }}"
@@ -27,7 +27,7 @@
     - env
     - labels
 
-- name: Ensure authelia configuration file installed
+- name: Ensure Authelia configuration file installed
   ansible.builtin.copy:
     content: "{{ authelia_configuration | to_nice_yaml(indent=2, width=999999) }}"
     dest: "{{ authelia_config_path }}/configuration.yml"
@@ -36,7 +36,7 @@
     group: "{{ authelia_gid }}"
 
 - when: authelia_config_authentication_backend_file_content != ''
-  name: Ensure authelia user database installed
+  name: Ensure Authelia user database installed
   ansible.builtin.copy:
     # We intentionally parse and reformat YAML to ensure it's valid and potentially choke early (during playbook run).
     content: "{{ authelia_config_authentication_backend_file_content | from_yaml | to_nice_yaml(indent=2, width=999999) }}"
@@ -46,12 +46,12 @@
     group: "{{ authelia_gid }}"
 
 - when: authelia_config_authentication_backend_file_content == ''
-  name: Ensure authelia user database purged
+  name: Ensure Authelia user database purged
   ansible.builtin.file:
     path: "{{ authelia_config_user_database_path }}"
     state: absent
 
-- name: Ensure authelia container image is pulled
+- name: Ensure Authelia container image is pulled
   community.docker.docker_image:
     name: "{{ authelia_container_image }}"
     source: "{{ 'pull' if ansible_version.major > 2 or ansible_version.minor > 7 else omit }}"
@@ -62,14 +62,14 @@
   delay: "{{ devture_playbook_help_container_retries_delay }}"
   until: result is not failed
 
-- name: Ensure authelia container network is created
+- name: Ensure Authelia container network is created
   community.general.docker_network:
     enable_ipv6: "{{ devture_systemd_docker_base_ipv6_enabled }}"
     name: "{{ authelia_container_network }}"
     driver: bridge
     driver_options: "{{ devture_systemd_docker_base_container_networks_driver_options }}"
 
-- name: Ensure authelia systemd service is present
+- name: Ensure Authelia systemd service is present
   ansible.builtin.template:
     src: "{{ role_path }}/templates/systemd/authelia.service.j2"
     dest: "{{ devture_systemd_docker_base_systemd_path }}/{{ authelia_identifier }}.service"

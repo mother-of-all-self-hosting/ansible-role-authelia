@@ -4,7 +4,7 @@
 
 ---
 
-- name: Fail if required authelia settings not defined
+- name: Fail if required Authelia settings not defined
   ansible.builtin.fail:
     msg: >
       You need to define a required configuration setting (`{{ item }}`).
@@ -71,7 +71,7 @@
 
 - when: authelia_container_labels_traefik_enabled | bool
   block:
-    - name: Fail if required authelia Traefik settings not defined
+    - name: Fail if required Authelia Traefik settings not defined
       ansible.builtin.fail:
         msg: >-
           You need to define a required configuration setting (`{{ item }}`).
