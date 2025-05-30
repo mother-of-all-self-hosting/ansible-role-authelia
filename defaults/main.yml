@@ -1,4 +1,8 @@
-# SPDX-FileCopyrightText: 2023 Slavi Pantaleev
+# SPDX-FileCopyrightText: 2023 - 2024 Nikita Chernyi
+# SPDX-FileCopyrightText: 2023 - 2025 Slavi Pantaleev
+# SPDX-FileCopyrightText: 2024 Sergio Durigan Junior
+# SPDX-FileCopyrightText: 2025 MASH project contributors
+# SPDX-FileCopyrightText: 2025 Suguru Hirahara
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -36,8 +40,10 @@ authelia_config_user_database_path: "{{ authelia_config_path }}/users.yml"
 authelia_data_path: "{{ authelia_base_path }}/data"
 
 authelia_container_image: "{{ authelia_container_image_registry_prefix }}authelia/authelia:{{ authelia_container_image_tag }}"
-authelia_container_image_registry_prefix: docker.io/
 authelia_container_image_tag: "{{ authelia_version }}"
+authelia_container_image_registry_prefix: "{{ authelia_container_image_registry_prefix_upstream }}"
+authelia_container_image_registry_prefix_upstream: "{{ authelia_container_image_registry_prefix_upstream_default }}"
+authelia_container_image_registry_prefix_upstream_default: docker.io/
 authelia_container_image_force_pull: "{{ authelia_container_image.endswith(':latest') }}"
 
 # The base container network. It will be auto-created by this role if it doesn't exist already.
