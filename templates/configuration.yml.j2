@@ -288,7 +288,7 @@ authentication_backend:
   ## because it allows Authelia to offload the stateful operations
   ## onto the LDAP service.
   {% if authelia_config_authentication_backend_ldap_url != '' %}
-  # ldap:
+  ldap:
     ## The LDAP implementation, this affects elements like the attribute utilised for resetting a password.
     ## Acceptable options are as follows:
     ## - 'activedirectory' - For Microsoft Active Directory.
