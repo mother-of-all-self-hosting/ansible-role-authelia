@@ -190,7 +190,6 @@ authelia_config_log_format: text
 #                                                                      #
 ########################################################################
 
-
 ########################################################################
 #                                                                      #
 # Session                                                              #
@@ -214,7 +213,6 @@ authelia_config_session_redis_port: 6379
 # /Session                                                             #
 #                                                                      #
 ########################################################################
-
 
 ########################################################################
 #                                                                      #
@@ -261,7 +259,6 @@ authelia_config_storage_postgres_password: ''
 #                                                                      #
 ########################################################################
 
-
 ########################################################################
 #                                                                      #
 # Filesystem-based email notifier                                      #
@@ -283,7 +280,6 @@ authelia_config_notifier_filesystem_filename: "{{ '/dev/stdout' if authelia_conf
 # /Filesystem-based email notifier                                     #
 #                                                                      #
 ########################################################################
-
 
 ########################################################################
 #                                                                      #
@@ -312,7 +308,6 @@ authelia_config_notifier_smtp_identifier: "{{ authelia_hostname }}"
 # /SMTP-based email notifier                                           #
 #                                                                      #
 ########################################################################
-
 
 ########################################################################
 #                                                                      #
@@ -351,7 +346,6 @@ authelia_config_authentication_backend_ldap_password: ''
 #                                                                      #
 ########################################################################
 
-
 ########################################################################
 #                                                                      #
 # File-based authentication backend                                    #
@@ -379,7 +373,6 @@ authelia_config_authentication_backend_file_content: ''
 # /File-based authentication backend                                   #
 #                                                                      #
 ########################################################################
-
 
 ########################################################################
 #                                                                      #
@@ -492,7 +485,6 @@ authelia_config_access_control_rules: []
 #                                                                      #
 ########################################################################
 
-
 ########################################################################
 #                                                                      #
 # OpenID Connect                                                       #
@@ -570,7 +562,6 @@ authelia_config_identity_providers_oidc_issuer_private_key: ''
 # /OpenID Connect                                                      #
 #                                                                      #
 ########################################################################
-
 
 # Default Authelia configuration template which covers the generic use case.
 # You can customize it by controlling the various variables inside it.
