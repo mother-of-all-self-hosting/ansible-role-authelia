@@ -281,7 +281,7 @@ authentication_backend:
   ## This is the recommended Authentication Provider in production
   ## because it allows Authelia to offload the stateful operations
   ## onto the LDAP service.
-  {% if authelia_config_authentication_backend_ldap_url != '' %}
+{% if authelia_config_authentication_backend_ldap_url != '' %}
   ldap:
     ## The LDAP implementation, this affects elements like the attribute utilised for resetting a password.
     ## Acceptable options are as follows:
@@ -458,7 +458,7 @@ authentication_backend:
     user: {{ authelia_config_authentication_backend_ldap_user | to_json }}
     ## Password can also be set using a secret: https://www.authelia.com/c/secrets
     password: {{ authelia_config_authentication_backend_ldap_password | to_json }}
-  {% endif %}
+{% endif %}
 
   ##
   ## File (Authentication Provider)
@@ -472,7 +472,7 @@ authentication_backend:
   ##
   ## Important: Kubernetes (or HA) users must read https://www.authelia.com/t/statelessness
   ##
-  {% if authelia_config_authentication_backend_file_path != '' %}
+{% if authelia_config_authentication_backend_file_path != '' %}
   file:
     path: {{ authelia_config_authentication_backend_file_path | to_json }}
     watch: {{ authelia_config_authentication_backend_file_watch | to_json }}
@@ -505,7 +505,7 @@ authentication_backend:
       # bcrypt:
         # variant: standard
         # cost: 12
-  {% endif %}
+{% endif %}
 
 
 ##
@@ -622,7 +622,7 @@ session:
   ##
   ## Important: Kubernetes (or HA) users must read https://www.authelia.com/t/statelessness
   ##
-  {% if authelia_config_session_redis_host != '' %}
+{% if authelia_config_session_redis_host != '' %}
   redis:
     host: {{ authelia_config_session_redis_host | to_json }}
     port: {{ authelia_config_session_redis_port | to_json }}
@@ -763,7 +763,7 @@ session:
 
       ## Choose the host randomly.
       # route_randomly: false
-  {% endif %}
+{% endif %}
 
 ##
 ## Regulation Configuration
@@ -801,16 +801,16 @@ storage:
   ##
   ## Important: Kubernetes (or HA) users must read https://www.authelia.com/t/statelessness
   ##
-  {% if authelia_config_storage_local_path != '' %}
+{% if authelia_config_storage_local_path != '' %}
   local:
     ## Path to the SQLite3 Database.
     path: {{ authelia_config_storage_local_path | to_json }}
-  {% endif %}
+{% endif %}
 
   ##
   ## MySQL / MariaDB (Storage Provider)
   ##
-  {% if authelia_config_storage_mysql_host != '' %}
+{% if authelia_config_storage_mysql_host != '' %}
   mysql:
     host: {{ authelia_config_storage_mysql_host |to_json }}
     port: {{ authelia_config_storage_mysql_port |to_json }}
@@ -912,12 +912,12 @@ storage:
         # 27GoE2i5mh6Yez6VAYbUuns3FcwIsMyWLq043Tu2DNkx9ijOOAuQzw^invalid..
         # DO NOT USE==
         # -----END RSA PRIVATE KEY-----
-  {% endif %}
+{% endif %}
 
   ##
   ## PostgreSQL (Storage Provider)
   ##
-  {% if authelia_config_storage_postgres_host != '' %}
+{% if authelia_config_storage_postgres_host != '' %}
   postgres:
     host: {{ authelia_config_storage_postgres_host | to_json }}
     port: {{ authelia_config_storage_postgres_port | to_json }}
@@ -1020,7 +1020,7 @@ storage:
         # 27GoE2i5mh6Yez6VAYbUuns3FcwIsMyWLq043Tu2DNkx9ijOOAuQzw^invalid..
         # DO NOT USE==
         # -----END RSA PRIVATE KEY-----
-  {% endif %}
+{% endif %}
 
 ##
 ## Notification Provider
@@ -1036,12 +1036,12 @@ notifier:
   ##
   ## Important: Kubernetes (or HA) users must read https://www.authelia.com/t/statelessness
   ##
-  {% if authelia_config_notifier_filesystem_filename != '' %}
+{% if authelia_config_notifier_filesystem_filename != '' %}
   filesystem:
     filename: {{ authelia_config_notifier_filesystem_filename | to_json }}
-  {% endif %}
+{% endif %}
 
-  {% if authelia_config_notifier_smtp_host != '' %}
+{% if authelia_config_notifier_smtp_host != '' %}
   ##
   ## SMTP (Notification Provider)
   ##
@@ -1181,7 +1181,7 @@ notifier:
         # 27GoE2i5mh6Yez6VAYbUuns3FcwIsMyWLq043Tu2DNkx9ijOOAuQzw^invalid..
         # DO NOT USE==
         # -----END RSA PRIVATE KEY-----
-  {% endif %}
+{% endif %}
 
 ##
 ## Identity Providers
