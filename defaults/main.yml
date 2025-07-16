@@ -235,19 +235,19 @@ authelia_config_storage_encryption_key: ''
 # authelia_config_storage_local_path specifies the (in-container) path to a local file to use for the SQLite database.
 # If non-empty, the local storage provider will be used with the specified path.
 # Example: /data/db.sqlite3
-authelia_config_storage_local_path: "{{ '/data/db.sqlite3' if (authelia_config_storage_mysql_host == '' and authelia_config_storage_postgres_host == '') else '' }}"
+authelia_config_storage_local_path: "{{ '/data/db.sqlite3' if (authelia_config_storage_mysql_hostname == '' and authelia_config_storage_postgres_hostname == '') else '' }}"
 
 # authelia_config_storage_mysql_* variables specify where to reach the MySQL database.
-# If `authelia_config_storage_mysql_host` is specified, the MySQL storage provider will be enabled.
-authelia_config_storage_mysql_host: ''
+# If `authelia_config_storage_mysql_hostname` is specified, the MySQL storage provider will be enabled.
+authelia_config_storage_mysql_hostname: ''
 authelia_config_storage_mysql_port: 3306
 authelia_config_storage_mysql_database: authelia
 authelia_config_storage_mysql_username: authelia
 authelia_config_storage_mysql_password: ''
 
 # authelia_config_storage_postgres_* variables specify where to reach the Postgres database.
-# If `authelia_config_storage_postgres_host` is specified, the Postgres storage provider will be enabled.
-authelia_config_storage_postgres_host: ''
+# If `authelia_config_storage_postgres_hostname` is specified, the Postgres storage provider will be enabled.
+authelia_config_storage_postgres_hostname: ''
 authelia_config_storage_postgres_port: 5432
 authelia_config_storage_postgres_database: authelia
 authelia_config_storage_postgres_username: authelia

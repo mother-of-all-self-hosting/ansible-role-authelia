@@ -810,9 +810,9 @@ storage:
   ##
   ## MySQL / MariaDB (Storage Provider)
   ##
-{% if authelia_config_storage_mysql_host != '' %}
+{% if authelia_config_storage_mysql_hostname != '' %}
   mysql:
-    host: {{ authelia_config_storage_mysql_host |to_json }}
+    host: {{ authelia_config_storage_mysql_hostname |to_json }}
     port: {{ authelia_config_storage_mysql_port |to_json }}
     database: {{ authelia_config_storage_mysql_database |to_json }}
     username: {{ authelia_config_storage_mysql_username |to_json }}
@@ -917,9 +917,9 @@ storage:
   ##
   ## PostgreSQL (Storage Provider)
   ##
-{% if authelia_config_storage_postgres_host != '' %}
+{% if authelia_config_storage_postgres_hostname != '' %}
   postgres:
-    host: {{ authelia_config_storage_postgres_host | to_json }}
+    host: {{ authelia_config_storage_postgres_hostname | to_json }}
     port: {{ authelia_config_storage_postgres_port | to_json }}
     database: {{ authelia_config_storage_postgres_database | to_json }}
     schema: public

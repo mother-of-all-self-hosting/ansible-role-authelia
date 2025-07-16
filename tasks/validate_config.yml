@@ -10,6 +10,8 @@
       Please change your configuration to rename the variable (`{{ item.old }}` -> `{{ item.new }}`).
   when: "item.old in vars"
   with_items:
+    - { "old": "authelia_config_storage_mysql_host", "new": "authelia_config_storage_mysql_hostname" }
+    - { "old": "authelia_config_storage_postgres_host", "new": "authelia_config_storage_postgres_hostname" }
     - { "old": "authelia_container_labels_traefik_forwardAuth_address_rd", "new": "authelia_container_labels_traefik_forwardauth_address_rd" }
 
 - name: Fail if required Authelia settings not defined
@@ -61,7 +63,7 @@
       You need to set either `authelia_config_storage_local_path` or
       a bunch of `authelia_config_storage_mysql_*` variables or
       a bunch of `authelia_config_storage_postgres_*` variables.
-  when: "authelia_config_authentication_backend_file_path == '' and authelia_config_storage_mysql_host == '' and authelia_config_storage_postgres_host == ''"
+  when: "authelia_config_authentication_backend_file_path == '' and authelia_config_storage_mysql_hostname == '' and authelia_config_storage_postgres_hostname == ''"
 
 - name: Fail if OpenID Connect enabled, but required authelia_config_identity_providers_oidc_issuer_private_key is not set
   ansible.builtin.fail:
