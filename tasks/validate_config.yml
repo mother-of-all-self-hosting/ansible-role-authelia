@@ -8,7 +8,7 @@
     msg: >-
       Your configuration contains a variable, which now has a different name.
       Please change your configuration to rename the variable (`{{ item.old }}` -> `{{ item.new }}`).
-  when: "item.old in vars"
+  when: "lookup('ansible.builtin.varnames', ('^' + item.old + '$'), wantlist=True) | length > 0"
   with_items:
     - { "old": "authelia_config_storage_mysql_host", "new": "authelia_config_storage_mysql_hostname" }
     - { "old": "authelia_config_storage_postgres_host", "new": "authelia_config_storage_postgres_hostname" }
