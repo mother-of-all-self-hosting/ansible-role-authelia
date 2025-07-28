@@ -24,11 +24,18 @@ traefik.http.middlewares.{{ authelia_identifier }}-strip-prefix.stripprefix.pref
 {% set middlewares = middlewares + [authelia_identifier + '-strip-prefix'] %}
 {% endif %}
 
+{% if authelia_container_labels_traefik_additional_request_headers.keys() | length > 0 %}
+{% for name, value in authelia_container_labels_traefik_additional_request_headers.items() %}
+traefik.http.middlewares.{{ authelia_identifier }}-add-request-headers.headers.customrequestheaders.{{ name }}={{ value }}
+{% endfor %}
+{% set middlewares = middlewares + [authelia_identifier + '-add-request-headers'] %}
+{% endif %}
+
 {% if authelia_container_labels_traefik_additional_response_headers.keys() | length > 0 %}
 {% for name, value in authelia_container_labels_traefik_additional_response_headers.items() %}
-traefik.http.middlewares.{{ authelia_identifier }}-add-headers.headers.customresponseheaders.{{ name }}={{ value }}
+traefik.http.middlewares.{{ authelia_identifier }}-add-response-headers.headers.customresponseheaders.{{ name }}={{ value }}
 {% endfor %}
-{% set middlewares = middlewares + [authelia_identifier + '-add-headers'] %}
+{% set middlewares = middlewares + [authelia_identifier + '-add-response-headers'] %}
 {% endif %}
 
 traefik.http.routers.{{ authelia_identifier }}.rule={{ authelia_container_labels_traefik_rule }}
