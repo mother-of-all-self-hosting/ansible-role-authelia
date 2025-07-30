@@ -72,13 +72,6 @@
       Authelia requires `authelia_config_identity_providers_oidc_issuer_private_key` to be specified when OpenID Connect is enabled.
   when: "authelia_config_identity_providers_oidc_clients | length > 0 and authelia_config_identity_providers_oidc_issuer_private_key == ''"
 
-- name: Fail if path prefix is not /
-  ansible.builtin.fail:
-    msg: >-
-      Authelia does not support being hosted at a subpath right now.
-      authelia_path_prefix must be set to `/`.
-  when: "authelia_path_prefix != '/'"
-
 - name: Run if Traefik is enabled
   when: authelia_container_labels_traefik_enabled | bool
   block:
@@ -99,3 +92,11 @@
         msg: >-
           authelia_container_labels_traefik_path_prefix (`{{ authelia_container_labels_traefik_path_prefix }}`) must either be `/` or not end with a slash (e.g. `/authelia`).
       when: "authelia_container_labels_traefik_path_prefix != '/' and authelia_container_labels_traefik_path_prefix[-1] == '/'"
+
+    - name: Fail if authelia_path_prefix is anything other than /
+      ansible.builtin.fail:
+        msg: >-
+          `authelia_path_prefix` must be set to `/`.
+          See the comments for the `authelia_path_prefix` variable in `defaults/main.yml`.
+          Hosting authelia at a subdirectory may or may not work as expected - it will most likely require additional work.
+      when: "authelia_path_prefix != '/'"
