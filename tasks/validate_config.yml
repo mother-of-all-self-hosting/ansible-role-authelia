@@ -84,6 +84,13 @@
         - authelia_container_labels_traefik_hostname
         - authelia_container_labels_traefik_path_prefix
 
+    - name: Fail if authelia_container_labels_traefik_path_prefix is different than /
+      ansible.builtin.fail:
+        msg: >-
+          authelia_container_labels_traefik_path_prefix (`{{ authelia_container_labels_traefik_path_prefix }}`) must be `/`.
+          Authelia does not support hosting under a subpath yet.
+      when: "authelia_container_labels_traefik_path_prefix != '/'"
+
     # We ensure it doesn't end with a slash, because we handle both (slash and no-slash).
     # Knowing that `authelia_container_labels_traefik_path_prefix` does not end with a slash
     # ensures we know how to set these routes up without having to do "does it end with a slash" checks elsewhere.
@@ -92,11 +99,3 @@
         msg: >-
           authelia_container_labels_traefik_path_prefix (`{{ authelia_container_labels_traefik_path_prefix }}`) must either be `/` or not end with a slash (e.g. `/authelia`).
       when: "authelia_container_labels_traefik_path_prefix != '/' and authelia_container_labels_traefik_path_prefix[-1] == '/'"
-
-    - name: Fail if authelia_path_prefix is anything other than /
-      ansible.builtin.fail:
-        msg: >-
-          `authelia_path_prefix` must be set to `/`.
-          See the comments for the `authelia_path_prefix` variable in `defaults/main.yml`.
-          Hosting authelia at a subdirectory may or may not work as expected - it will most likely require additional work.
-      when: "authelia_path_prefix != '/'"
