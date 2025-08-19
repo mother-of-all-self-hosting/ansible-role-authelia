@@ -1,4 +1,5 @@
 # SPDX-FileCopyrightText: 2023 Slavi Pantaleev
+# SPDX-FileCopyrightText: 2025 Suguru Hirahara
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -10,6 +11,7 @@
       Please change your configuration to rename the variable (`{{ item.old }}` -> `{{ item.new }}`).
   when: "lookup('ansible.builtin.varnames', ('^' + item.old + '$'), wantlist=True) | length > 0"
   with_items:
+    - { "old": "authelia_config_session_redis_host", "new": "authelia_config_session_redis_hostname" }
     - { "old": "authelia_config_storage_mysql_host", "new": "authelia_config_storage_mysql_hostname" }
     - { "old": "authelia_config_storage_postgres_host", "new": "authelia_config_storage_postgres_hostname" }
     - { "old": "authelia_container_labels_traefik_forwardAuth_address_rd", "new": "authelia_container_labels_traefik_forwardauth_address_rd" }

@@ -211,7 +211,7 @@ authelia_config_session_secret: ''
 
 # Unless Redis information is specified, session information is stored in memory.
 # When session information is stored in memory, restarting the process will destroy all user sessions.
-authelia_config_session_redis_host: ''
+authelia_config_session_redis_hostname: ''
 authelia_config_session_redis_port: 6379
 
 ########################################################################

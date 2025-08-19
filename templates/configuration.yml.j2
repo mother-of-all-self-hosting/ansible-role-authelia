@@ -622,9 +622,9 @@ session:
   ##
   ## Important: Kubernetes (or HA) users must read https://www.authelia.com/t/statelessness
   ##
-{% if authelia_config_session_redis_host != '' %}
+{% if authelia_config_session_redis_hostname != '' %}
   redis:
-    host: {{ authelia_config_session_redis_host | to_json }}
+    host: {{ authelia_config_session_redis_hostname | to_json }}
     port: {{ authelia_config_session_redis_port | to_json }}
     ## Use a unix socket instead
     # host: /var/run/redis/redis.sock
