@@ -86,6 +86,12 @@
       authelia_config_log_format must be 'json' or 'text'
   when: "authelia_config_log_format not in ['json', 'text']"
 
+- name: Fail if Authelia LDAP authentication backend is invalid
+  ansible.builtin.fail:
+    msg: >-
+      authelia_config_authentication_backend_ldap_implementation must be 'activedirectory' or 'custom'
+  when: "authelia_config_authentication_backend_ldap_implementation not in ['activedirectory', 'custom']"
+
 - name: Run if Traefik is enabled
   when: authelia_container_labels_traefik_enabled | bool
   block:

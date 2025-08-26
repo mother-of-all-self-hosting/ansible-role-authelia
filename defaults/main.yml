@@ -331,7 +331,7 @@ authelia_config_notifier_smtp_identifier: "{{ authelia_hostname }}"
 #
 # Alternatively, see "File-based authentication backend".
 
-# Valid choices: activedirectory, custom
+# Valid values: activedirectory, custom
 authelia_config_authentication_backend_ldap_implementation: custom
 # Example: ldap://1.2.3.4
 authelia_config_authentication_backend_ldap_url: ''
