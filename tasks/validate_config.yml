@@ -74,6 +74,18 @@
       Authelia requires `authelia_config_identity_providers_oidc_issuer_private_key` to be specified when OpenID Connect is enabled.
   when: "authelia_config_identity_providers_oidc_clients | length > 0 and authelia_config_identity_providers_oidc_issuer_private_key == ''"
 
+- name: Fail if Authelia logging level is invalid
+  ansible.builtin.fail:
+    msg: >-
+      authelia_config_log_level must be 'info', 'debug', or 'trace'
+  when: "authelia_config_log_level not in ['info', 'debug', 'trace']"
+
+- name: Fail if Authelia logging format is invalid
+  ansible.builtin.fail:
+    msg: >-
+      authelia_config_log_format must be 'json' or 'text'
+  when: "authelia_config_log_format not in ['json', 'text']"
+
 - name: Run if Traefik is enabled
   when: authelia_container_labels_traefik_enabled | bool
   block:
