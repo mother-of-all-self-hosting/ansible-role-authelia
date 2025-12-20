@@ -173,6 +173,9 @@ authelia_systemd_wanted_services_list_default: []
 authelia_systemd_wanted_services_list_auto: []
 authelia_systemd_wanted_services_list_custom: []
 
+# Specify the timezone
+authelia_environment_variables_tz: UTC
+
 # Additional environment variables.
 # See: https://www.authelia.com/configuration/methods/environment/
 authelia_environment_variables_additional_variables: ''
