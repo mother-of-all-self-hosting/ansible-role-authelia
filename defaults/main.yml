@@ -101,7 +101,9 @@ authelia_container_labels_traefik_additional_response_headers_custom: {}
 authelia_container_labels_additional_labels: ''
 
 # A list of extra arguments to pass to the container
-authelia_container_extra_arguments: []
+authelia_container_extra_arguments: "{{ authelia_container_extra_arguments_auto + authelia_container_extra_arguments_custom }}"
+authelia_container_extra_arguments_auto: []
+authelia_container_extra_arguments_custom: []
 
 # Specifies how often the container health-check will run.
 #
