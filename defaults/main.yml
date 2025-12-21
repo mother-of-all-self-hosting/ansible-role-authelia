@@ -103,7 +103,7 @@ authelia_container_labels_additional_labels: "{{ authelia_container_labels_addit
 authelia_container_labels_additional_labels_auto: {}
 authelia_container_labels_additional_labels_custom: {}
 
-# A list of extra arguments to pass to the container
+# A list of extra arguments to pass to the container (`docker create` command)
 authelia_container_extra_arguments: "{{ authelia_container_extra_arguments_auto + authelia_container_extra_arguments_custom }}"
 authelia_container_extra_arguments_auto: []
 authelia_container_extra_arguments_custom: []
