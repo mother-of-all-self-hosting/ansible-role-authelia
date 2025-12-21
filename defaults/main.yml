@@ -24,13 +24,13 @@ authelia_data_path: "{{ authelia_base_path }}/data"
 # renovate: datasource=docker depName=ghcr.io/authelia/authelia
 authelia_version: 4.37.5
 
-authelia_uid: ''
-authelia_gid: ''
+authelia_uid: ""
+authelia_gid: ""
 
 authelia_scheme: https
 
 # The hostname at which Authelia is served.
-authelia_hostname: ''
+authelia_hostname: ""
 
 # The path at which Authelia is served.
 # This value must either be `/` or not end with a slash (e.g. `/authelia`).
@@ -183,9 +183,9 @@ authelia_environment_variables_tz: UTC
 
 # Additional environment variables.
 # See: https://www.authelia.com/configuration/methods/environment/
-authelia_environment_variables_additional_variables: ''
+authelia_environment_variables_additional_variables: ""
 
-authelia_config_jwt_secret: ''
+authelia_config_jwt_secret: ""
 
 authelia_config_default_redirection_url: "{{ authelia_scheme }}://{{ authelia_hostname }}{{ authelia_path_prefix }}"
 
@@ -217,12 +217,12 @@ authelia_config_log_format: text
 #
 # See: https://www.authelia.com/configuration/session/introduction/
 
-authelia_config_session_domain: ''
-authelia_config_session_secret: ''
+authelia_config_session_domain: ""
+authelia_config_session_secret: ""
 
 # Unless Redis information is specified, session information is stored in memory.
 # When session information is stored in memory, restarting the process will destroy all user sessions.
-authelia_config_session_redis_hostname: ''
+authelia_config_session_redis_hostname: ""
 authelia_config_session_redis_port: 6379
 
 ########################################################################
@@ -247,7 +247,7 @@ authelia_config_session_redis_port: 6379
 # authelia_config_storage_encryption_key stores the encryption key that is used to encrypt sensitive information in the database.
 # It must be a string with a minimum length of 20.
 # Changing it subsequently will cause trouble.
-authelia_config_storage_encryption_key: ''
+authelia_config_storage_encryption_key: ""
 
 # authelia_config_storage_local_path specifies the (in-container) path to a local file to use for the SQLite database.
 # If non-empty, the local storage provider will be used with the specified path.
@@ -256,19 +256,19 @@ authelia_config_storage_local_path: "{{ '/data/db.sqlite3' if (authelia_config_s
 
 # authelia_config_storage_mysql_* variables specify where to reach the MySQL database.
 # If `authelia_config_storage_mysql_hostname` is specified, the MySQL storage provider will be enabled.
-authelia_config_storage_mysql_hostname: ''
+authelia_config_storage_mysql_hostname: ""
 authelia_config_storage_mysql_port: 3306
 authelia_config_storage_mysql_database: authelia
 authelia_config_storage_mysql_username: authelia
-authelia_config_storage_mysql_password: ''
+authelia_config_storage_mysql_password: ""
 
 # authelia_config_storage_postgres_* variables specify where to reach the Postgres database.
 # If `authelia_config_storage_postgres_hostname` is specified, the Postgres storage provider will be enabled.
-authelia_config_storage_postgres_hostname: ''
+authelia_config_storage_postgres_hostname: ""
 authelia_config_storage_postgres_port: 5432
 authelia_config_storage_postgres_database: authelia
 authelia_config_storage_postgres_username: authelia
-authelia_config_storage_postgres_password: ''
+authelia_config_storage_postgres_password: ""
 
 ########################################################################
 #                                                                      #
@@ -313,10 +313,10 @@ authelia_config_notifier_filesystem_filename: "{{ '/dev/stdout' if authelia_conf
 # Alternatively, see "Filesystem-based email notifier" which is enabled by default
 # when SMTP-sending is not configured.
 
-authelia_config_notifier_smtp_host: ''
+authelia_config_notifier_smtp_host: ""
 authelia_config_notifier_smtp_port: 587
-authelia_config_notifier_smtp_username: ''
-authelia_config_notifier_smtp_password: ''
+authelia_config_notifier_smtp_username: ""
+authelia_config_notifier_smtp_password: ""
 authelia_config_notifier_smtp_sender: "Authelia <admin@example.com>"
 authelia_config_notifier_smtp_identifier: "{{ authelia_hostname }}"
 
@@ -342,9 +342,9 @@ authelia_config_notifier_smtp_identifier: "{{ authelia_hostname }}"
 # Valid values: activedirectory, custom
 authelia_config_authentication_backend_ldap_implementation: custom
 # Example: ldap://1.2.3.4
-authelia_config_authentication_backend_ldap_url: ''
+authelia_config_authentication_backend_ldap_url: ""
 # Example: dc=example,dc=com
-authelia_config_authentication_backend_ldap_base_dn: ''
+authelia_config_authentication_backend_ldap_base_dn: ""
 authelia_config_authentication_backend_ldap_username_attribute: uid
 authelia_config_authentication_backend_ldap_additional_users_dn: ou=users
 authelia_config_authentication_backend_ldap_users_filter: "(&({username_attribute}={input})(objectClass=person))"
@@ -354,8 +354,8 @@ authelia_config_authentication_backend_ldap_group_name_attribute: cn
 authelia_config_authentication_backend_ldap_mail_attribute: mail
 authelia_config_authentication_backend_ldap_display_name_attribute: displayName
 # Example: cn=admin,dc=example,dc=com
-authelia_config_authentication_backend_ldap_user: ''
-authelia_config_authentication_backend_ldap_password: ''
+authelia_config_authentication_backend_ldap_user: ""
+authelia_config_authentication_backend_ldap_password: ""
 
 ########################################################################
 #                                                                      #
@@ -383,7 +383,7 @@ authelia_config_authentication_backend_file_watch: true
 
 # If `authelia_config_authentication_backend_file_content` is specified, the users database will be managed by the playbook
 # and the contents specified in this variable will be stored in `authelia_config_user_database_path`.
-authelia_config_authentication_backend_file_content: ''
+authelia_config_authentication_backend_file_content: ""
 
 ########################################################################
 #                                                                      #
@@ -535,7 +535,7 @@ authelia_config_identity_providers_oidc_clients: []
 
 # authelia_config_identity_providers_oidc_hmac_secret is used to sign OAuth2 tokens (authorization code, access tokens and refresh tokens).
 # It's not required, but setting it is recommended.
-authelia_config_identity_providers_oidc_hmac_secret: ''
+authelia_config_identity_providers_oidc_hmac_secret: ""
 
 # authelia_config_identity_providers_oidc_issuer_private_key is used to sign the JWT forged by OpenID Connect.
 #
@@ -572,7 +572,7 @@ authelia_config_identity_providers_oidc_hmac_secret: ''
 #   27GoE2i5mh6Yez6VAYbUuns3FcwIsMyWLq043Tu2DNkx9ijOOAuQzw^invalid..
 #   DO NOT USE==
 #   -----END RSA PRIVATE KEY-----
-authelia_config_identity_providers_oidc_issuer_private_key: ''
+authelia_config_identity_providers_oidc_issuer_private_key: ""
 
 ########################################################################
 #                                                                      #
