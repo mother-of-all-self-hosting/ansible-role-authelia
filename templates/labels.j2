@@ -62,4 +62,6 @@ traefik.http.middlewares.{{ authelia_identifier }}-basic.forwardAuth.trustForwar
 traefik.http.middlewares.{{ authelia_identifier }}-basic.forwardAuth.authResponseHeaders=Remote-User,Remote-Groups,Remote-Name,Remote-Email
 {% endif %}
 
-{{ authelia_container_labels_additional_labels }}
+{% for arg in authelia_container_labels_additional_labels %}
+{{ arg }}
+{% endfor %}

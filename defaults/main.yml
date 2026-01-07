@@ -97,11 +97,11 @@ authelia_container_labels_traefik_additional_response_headers_custom: {}
 #
 # Example:
 # authelia_container_labels_additional_labels_custom: |
-#   my.label=1
-#   another.label="here"
-authelia_container_labels_additional_labels: "{{ authelia_container_labels_additional_labels_auto | combine(authelia_container_labels_additional_labels_custom) }}"
-authelia_container_labels_additional_labels_auto: {}
-authelia_container_labels_additional_labels_custom: {}
+#   - my.label=1
+#   - another.label="here"
+authelia_container_labels_additional_labels: "{{ authelia_container_labels_additional_labels_auto + authelia_container_labels_additional_labels_custom }}"
+authelia_container_labels_additional_labels_auto: []
+authelia_container_labels_additional_labels_custom: []
 
 # A list of extra arguments to pass to the container (`docker create` command)
 authelia_container_extra_arguments: "{{ authelia_container_extra_arguments_auto + authelia_container_extra_arguments_custom }}"
