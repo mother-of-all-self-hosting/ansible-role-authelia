@@ -34,7 +34,9 @@ authelia_hostname: ""
 
 # The path at which Authelia is served.
 # This value must either be `/` or not end with a slash (e.g. `/authelia`).
-# As of right now, Authelia cannot be hosted at a subpath, so this can only possibly be set to `/`.
+#
+# Hosting Authelia under a subpath does not seem to be possible due to Authelia's
+# technical limitations.
 authelia_path_prefix: /
 
 authelia_container_image: "{{ authelia_container_image_registry_prefix }}authelia/authelia:{{ authelia_container_image_tag }}"
@@ -57,7 +59,7 @@ authelia_container_additional_networks_custom: []
 # authelia_container_labels_traefik_enabled controls whether labels to assist a Traefik reverse-proxy will be attached to the container.
 # See `../templates/labels.j2` for details.
 #
-# To inject your own other container labels, see `authelia_container_labels_additional_labels`.
+# To inject your own other container labels, see `authelia_container_labels_additional_labels_custom`.
 authelia_container_labels_traefik_enabled: true
 authelia_container_labels_traefik_docker_network: "{{ authelia_container_network }}"
 authelia_container_labels_traefik_hostname: "{{ authelia_hostname }}"
