@@ -27,6 +27,7 @@ authelia_version: 4.37.5
 authelia_uid: ""
 authelia_gid: ""
 
+# The scheme used for serving Authelia.
 authelia_scheme: https
 
 # The hostname at which Authelia is served.
