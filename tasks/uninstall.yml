@@ -24,21 +24,24 @@
         path: "{{ devture_systemd_docker_base_systemd_path }}/{{ authelia_identifier }}.service"
         state: absent
 
-    - name: Ensure Authelia container network does not exist via community.docker.docker_network
-      when: devture_systemd_docker_base_container_network_creation_method == 'ansible-module'
-      community.docker.docker_network:
-        name: "{{ authelia_container_network }}"
-        state: absent
-      register: authelia_network_deletion_result
+    - name: Ensure Authelia container network does not exist
+      when: authelia_container_network_deletion_enabled
+      block:
+        - name: Ensure Authelia container network does not exist via community.docker.docker_network
+          when: devture_systemd_docker_base_container_network_creation_method == 'ansible-module'
+          community.docker.docker_network:
+            name: "{{ authelia_container_network }}"
+            state: absent
+          register: authelia_network_deletion_result
 
-    - name: Ensure Authelia container network does not exist via ansible.builtin.command
-      when: devture_systemd_docker_base_container_network_creation_method == 'command'
-      ansible.builtin.command:
-        cmd: >-
-          {{ devture_systemd_docker_base_host_command_docker }} network rm
-          {{ authelia_container_network }}
-      register: authelia_network_deletion_result
-      changed_when: authelia_container_network in authelia_network_deletion_result.stdout
+        - name: Ensure Authelia container network does not exist via ansible.builtin.command
+          when: devture_systemd_docker_base_container_network_creation_method == 'command'
+          ansible.builtin.command:
+            cmd: >-
+              {{ devture_systemd_docker_base_host_command_docker }} network rm
+              {{ authelia_container_network }}
+          register: authelia_network_deletion_result
+          changed_when: authelia_container_network in authelia_network_deletion_result.stdout
 
     - name: Ensure Authelia path does not exist
       ansible.builtin.file:
