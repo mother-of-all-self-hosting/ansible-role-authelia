@@ -215,6 +215,10 @@ authelia_container_cleanup_command: |
   echo "Failed to remove stale container {{ authelia_identifier }} after {{ authelia_container_cleanup_timeout_seconds }} attempts" >&2;
   exit 1
 
+authelia_config_jwt_secret: ""
+
+authelia_config_default_redirection_url: "{{ authelia_scheme }}://{{ authelia_hostname }}{{ authelia_path_prefix }}"
+
 # Specify the timezone
 authelia_environment_variables_tz: UTC
 
@@ -231,10 +235,6 @@ authelia_environment_variables_additional_variables: ""
 # The default of `false` means "no restart needed" — appropriate when the role's
 # installation tasks haven't run (e.g., due to --tags skipping them).
 authelia_restart_necessary: false
-
-authelia_config_jwt_secret: ""
-
-authelia_config_default_redirection_url: "{{ authelia_scheme }}://{{ authelia_hostname }}{{ authelia_path_prefix }}"
 
 ########################################################################
 #                                                                      #
