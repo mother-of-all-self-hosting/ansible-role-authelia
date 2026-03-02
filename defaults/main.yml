@@ -222,6 +222,16 @@ authelia_environment_variables_tz: UTC
 # See: https://www.authelia.com/configuration/methods/environment/
 authelia_environment_variables_additional_variables: ""
 
+# authelia_restart_necessary controls whether the Authelia systemd
+# service will be restarted (when true) or merely started (when false) by the
+# systemd service manager role (when conditional restart is enabled).
+#
+# This value is automatically computed during installation based on whether
+# any configuration files, the systemd service file, or the container image changed.
+# The default of `false` means "no restart needed" — appropriate when the role's
+# installation tasks haven't run (e.g., due to --tags skipping them).
+authelia_restart_necessary: false
+
 authelia_config_jwt_secret: ""
 
 authelia_config_default_redirection_url: "{{ authelia_scheme }}://{{ authelia_hostname }}{{ authelia_path_prefix }}"

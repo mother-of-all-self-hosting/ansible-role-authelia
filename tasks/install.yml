@@ -25,6 +25,7 @@
   with_items:
     - env
     - labels
+  register: authelia_support_files_result
 
 - name: Ensure Authelia configuration file installed
   ansible.builtin.copy:
@@ -33,6 +34,7 @@
     mode: "0640"
     owner: "{{ authelia_uid }}"
     group: "{{ authelia_gid }}"
+  register: authelia_config_file_result
 
 - name: Ensure Authelia user database installed
   when: authelia_config_authentication_backend_file_content != ''
@@ -43,12 +45,14 @@
     mode: "0640"
     owner: "{{ authelia_uid }}"
     group: "{{ authelia_gid }}"
+  register: authelia_user_database_creation_result
 
 - name: Ensure Authelia user database purged
   when: authelia_config_authentication_backend_file_content == ''
   ansible.builtin.file:
     path: "{{ authelia_config_user_database_path }}"
     state: absent
+  register: authelia_user_database_deletion_result
 
 - name: Ensure Authelia container image is pulled via community.docker.docker_image
   when: devture_systemd_docker_base_container_image_pull_method == 'ansible-module'
@@ -57,20 +61,20 @@
     source: "{{ 'pull' if ansible_version.major > 2 or ansible_version.minor > 7 else omit }}"
     force_source: "{{ authelia_container_image_force_pull if ansible_version.major > 2 or ansible_version.minor >= 8 else omit }}"
     force: "{{ omit if ansible_version.major > 2 or ansible_version.minor >= 8 else authelia_container_image_force_pull }}"
-  register: result
+  register: authelia_container_image_pull_result
   retries: "{{ devture_playbook_help_container_retries_count }}"
   delay: "{{ devture_playbook_help_container_retries_delay }}"
-  until: result is not failed
+  until: authelia_container_image_pull_result is not failed
 
 - name: Ensure Authelia container image is pulled via ansible.builtin.command
   when: devture_systemd_docker_base_container_image_pull_method == 'command'
   ansible.builtin.command:
     cmd: "{{ devture_systemd_docker_base_host_command_docker }} pull {{ authelia_container_image }}"
-  register: result
+  register: authelia_container_image_pull_result
   retries: "{{ devture_playbook_help_container_retries_count }}"
   delay: "{{ devture_playbook_help_container_retries_delay }}"
-  until: result is not failed
-  changed_when: "'Downloaded newer image' in result.stdout"
+  until: authelia_container_image_pull_result is not failed
+  changed_when: "'Downloaded newer image' in authelia_container_image_pull_result.stdout"
 
 - name: Ensure Authelia container network is created via community.docker.docker_network
   when: devture_systemd_docker_base_container_network_creation_method == 'ansible-module'
@@ -98,3 +102,16 @@
     src: "{{ role_path }}/templates/systemd/authelia.service.j2"
     dest: "{{ devture_systemd_docker_base_systemd_path }}/{{ authelia_identifier }}.service"
     mode: "0644"
+  register: authelia_systemd_service_result
+
+- name: Determine whether Authelia needs a restart
+  ansible.builtin.set_fact:
+    authelia_restart_necessary: >-
+      {{
+        authelia_support_files_result.changed | default(false)
+        or authelia_config_file_result.changed | default(false)
+        or authelia_user_database_creation_result.changed | default(false)
+        or authelia_user_database_deletion_result.changed | default(false)
+        or authelia_systemd_service_result.changed | default(false)
+        or authelia_container_image_pull_result.changed | default(false)
+      }}
