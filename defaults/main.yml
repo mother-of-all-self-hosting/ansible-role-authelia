@@ -45,7 +45,6 @@ authelia_container_image_tag: "{{ authelia_version }}"
 authelia_container_image_registry_prefix: "{{ authelia_container_image_registry_prefix_upstream }}"
 authelia_container_image_registry_prefix_upstream: "{{ authelia_container_image_registry_prefix_upstream_default }}"
 authelia_container_image_registry_prefix_upstream_default: ghcr.io/
-authelia_container_image_force_pull: "{{ authelia_container_image.endswith(':latest') }}"
 
 # The base container network. It will be auto-created by this role if it doesn't exist already.
 authelia_container_network: "{{ authelia_identifier }}"
