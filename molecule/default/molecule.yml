@@ -1,0 +1,76 @@
+# SPDX-FileCopyrightText: 2026 Slavi Pantaleev
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+---
+dependency:
+  name: galaxy
+  options:
+    requirements-file: requirements.yml
+    force: true
+driver:
+  name: docker
+platforms:
+  - name: authelia-${MOLECULE_DISTRO:-ubuntu2604}-default
+    image: "geerlingguy/docker-${MOLECULE_DISTRO:-ubuntu2604}-ansible:latest"
+    command: ${MOLECULE_DOCKER_COMMAND:-""}
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    cgroupns_mode: host
+    privileged: true
+    pre_build_image: true
+provisioner:
+  name: ansible
+  config_options:
+    defaults:
+      callback_result_format: yaml
+  inventory:
+    group_vars:
+      all:
+        # Helper variables
+        authelia_debug_service_enabled: false
+
+        # The port on the host that the Authelia portal is published on. The
+        # role itself does not publish it (Authelia is meant to be reached
+        # through a reverse-proxy), so the scenario publishes it via
+        # `authelia_container_extra_arguments_custom` below.
+        authelia_molecule_bind_port: 9091
+
+        # Variables for Authelia
+        authelia_uid: 1000
+        authelia_gid: 1000
+        authelia_hostname: auth.example.com
+        authelia_container_labels_traefik_enabled: false
+
+        # Authelia refuses to start when the redirection URL it is configured
+        # with is not on (a subdomain of) the session domain. The role derives
+        # the redirection URL from `authelia_hostname`, so the two must agree.
+        authelia_config_session_domain: example.com
+
+        # Throwaway secrets for this scenario only. The storage encryption key
+        # must be at least 20 characters long, which the role also validates.
+        authelia_config_jwt_secret: molecule-jwt-secret-molecule-jwt-secret
+        authelia_config_session_secret: molecule-session-secret-molecule-session-secret
+        authelia_config_storage_encryption_key: molecule-storage-encryption-key
+
+        authelia_container_extra_arguments_custom:
+          - "-p 127.0.0.1:{{ authelia_molecule_bind_port }}:9091"
+
+        # Authelia checks the clock against a public NTP server on startup and
+        # logs an error when it cannot reach one. Disabling that check keeps
+        # the scenario self-contained, and exercises the role's configuration
+        # extension mechanism at the same time.
+        authelia_configuration_extension_yaml: |
+          ntp:
+            disable_startup_check: true
+
+        # The test user's credentials are deliberately NOT defined here.
+        # An argon2id password hash is full of dollar signs, and Molecule
+        # expands anything looking like an environment variable in this file.
+        # `converge.yml` and `verify.yml` read them from `vars/credentials.yml`
+        # instead, where nothing interpolates them.
+  env:
+    # Workaround for https://github.com/ansible/molecule/issues/4391
+    ANSIBLE_ROLES_PATH: ${MOLECULE_PROJECT_DIRECTORY}/..:/.ansible/roles:/usr/share/ansible/roles:/etc/ansible/roles:~/.ansible/roles
+verifier:
+  name: ansible

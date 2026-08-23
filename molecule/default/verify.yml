@@ -1,0 +1,214 @@
+# SPDX-FileCopyrightText: 2026 Slavi Pantaleev
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+---
+- name: Verify Authelia
+  hosts: all
+  become: true
+  gather_facts: false
+  vars:
+    authelia_molecule_base_url: "http://127.0.0.1:{{ authelia_molecule_bind_port }}"
+  tasks:
+    # The role is not included in this playbook, so its defaults are not in
+    # scope. Reading defaults/main.yml directly keeps the version assertion
+    # below tied to the value that Renovate bumps, with nothing to keep in
+    # sync in this scenario. include_vars reads from the controller.
+    - name: Load the Authelia role defaults
+      ansible.builtin.include_vars:
+        file: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/defaults/main.yml"
+        name: authelia_defaults
+
+    - name: Load the Authelia Molecule test credentials
+      ansible.builtin.include_vars:
+        file: "{{ lookup('env', 'MOLECULE_SCENARIO_DIRECTORY') }}/vars/credentials.yml"
+
+    - name: Wait for Authelia service to become active (up to 180s)
+      ansible.builtin.systemd:
+        name: authelia.service
+      register: authelia_service
+      until: authelia_service.status.ActiveState == 'active'
+      retries: 36
+      delay: 5
+
+    # Authelia validates its whole configuration at startup and refuses to run
+    # when it does not like it. Started without a configuration file at all, it
+    # writes a default one and exits immediately without ever binding a port -
+    # which under this role's `Restart=always` unit means a crash loop. An
+    # Authelia that is merely running is therefore already an Authelia whose
+    # configuration this role generated correctly.
+    - name: Assert Authelia service is active
+      ansible.builtin.assert:
+        that: authelia_service.status.ActiveState == 'active'
+        fail_msg: "authelia.service not active ({{ authelia_service.status.ActiveState }})"
+        success_msg: "authelia.service is active"
+
+    - name: Retrieve Authelia service log for debugging
+      when: authelia_debug_service_enabled | bool
+      ansible.builtin.command:
+        cmd: journalctl -xeu authelia.service
+      changed_when: false
+
+    - name: Wait for the Authelia health endpoint to report OK (up to 180s)
+      ansible.builtin.uri:
+        url: "{{ authelia_molecule_base_url }}/api/health"
+        method: GET
+        # Authelia answers all of the paths probed in this playbook directly;
+        # none of them redirect today. Not following redirects keeps a future
+        # redirect (to an error or a setup page) from answering with a 200 of
+        # its own and being mistaken for a serving Authelia.
+        follow_redirects: none
+        return_content: true
+      register: authelia_health
+      until: authelia_health.status == 200 and authelia_health.json.status == 'OK'
+      retries: 36
+      delay: 5
+
+    - name: Assert Authelia reports itself healthy
+      ansible.builtin.assert:
+        that: authelia_health.json.status == 'OK'
+        fail_msg: "Authelia is not healthy: {{ authelia_health.json }}"
+        success_msg: "Authelia reports itself healthy"
+
+    # The login portal is a single-page application served from the same
+    # listener. Asking for real content (rather than just a status code) is
+    # what tells a serving Authelia apart from one that answers the health
+    # endpoint but fails to serve its frontend assets.
+    - name: Fetch the Authelia login portal
+      ansible.builtin.uri:
+        url: "{{ authelia_molecule_base_url }}/"
+        method: GET
+        follow_redirects: none
+        return_content: true
+      register: authelia_portal
+
+    - name: Assert the Authelia login portal renders
+      ansible.builtin.assert:
+        that: "'<title>Login - Authelia</title>' in authelia_portal.content"
+        fail_msg: "The Authelia login portal did not render as expected"
+        success_msg: "The Authelia login portal renders"
+
+    # Reports the configuration Authelia is actually running with, which is
+    # what ties the served instance back to the values this role templated.
+    - name: Query the anonymous Authelia session state
+      ansible.builtin.uri:
+        url: "{{ authelia_molecule_base_url }}/api/state"
+        method: GET
+        follow_redirects: none
+        return_content: true
+      register: authelia_anonymous_state
+
+    - name: Assert Authelia runs with the configuration this role generated
+      ansible.builtin.assert:
+        that:
+          - authelia_anonymous_state.json.data.username == ''
+          - authelia_anonymous_state.json.data.authentication_level == 0
+          - authelia_anonymous_state.json.data.default_redirection_url == 'https://' ~ authelia_hostname ~ '/'
+        fail_msg: "Authelia is not running with the expected configuration: {{ authelia_anonymous_state.json.data }}"
+        success_msg: "Authelia runs with the configuration this role generated"
+
+    # The point of this role: a user out of the file-based authentication
+    # backend that the role wrote can actually log in. This exercises the
+    # configuration file, the user database, the argon2id verification and the
+    # SQLite storage provider in one go.
+    - name: Authenticate against Authelia with the test user's credentials
+      ansible.builtin.uri:
+        url: "{{ authelia_molecule_base_url }}/api/firstfactor"
+        method: POST
+        body_format: json
+        body:
+          username: "{{ authelia_molecule_username }}"
+          password: "{{ authelia_molecule_password }}"
+          keepMeLoggedIn: false
+        follow_redirects: none
+        return_content: true
+      register: authelia_firstfactor
+
+    - name: Assert Authelia accepted the test user's credentials
+      ansible.builtin.assert:
+        that:
+          - authelia_firstfactor.json.status == 'OK'
+          - "'set_cookie' in authelia_firstfactor"
+          - "'authelia_session=' in authelia_firstfactor.set_cookie"
+        fail_msg: "Authelia did not accept the test user's credentials: {{ authelia_firstfactor.json }}"
+        success_msg: "Authelia accepted the test user's credentials and issued a session cookie"
+
+    - name: Extract the Authelia session cookie
+      ansible.builtin.set_fact:
+        authelia_molecule_session_cookie: "{{ authelia_firstfactor.set_cookie | regex_search('authelia_session=[^;]+') }}"
+
+    # A cookie is only worth as much as the session behind it. Asking Authelia
+    # who it thinks the caller is proves the session was really established,
+    # and that the display data came out of the user database the role wrote.
+    - name: Query the Authelia session state with the session cookie
+      ansible.builtin.uri:
+        url: "{{ authelia_molecule_base_url }}/api/state"
+        method: GET
+        follow_redirects: none
+        headers:
+          Cookie: "{{ authelia_molecule_session_cookie }}"
+        return_content: true
+      register: authelia_authenticated_state
+
+    - name: Assert the Authelia session cookie identifies the test user
+      ansible.builtin.assert:
+        that:
+          - authelia_authenticated_state.json.data.username == authelia_molecule_username
+          - authelia_authenticated_state.json.data.authentication_level == 1
+        fail_msg: "The Authelia session does not belong to the test user: {{ authelia_authenticated_state.json.data }}"
+        success_msg: "The Authelia session belongs to the test user"
+
+    # Negative control for the round-trip above: without it, an Authelia that
+    # waved everyone through would pass every assertion so far.
+    - name: Attempt to authenticate against Authelia with a wrong password
+      ansible.builtin.uri:
+        url: "{{ authelia_molecule_base_url }}/api/firstfactor"
+        method: POST
+        body_format: json
+        body:
+          username: "{{ authelia_molecule_username }}"
+          password: "{{ authelia_molecule_password }}-wrong"
+          keepMeLoggedIn: false
+        follow_redirects: none
+        status_code: 401
+        return_content: true
+      register: authelia_firstfactor_rejected
+
+    - name: Assert Authelia rejected the wrong password
+      ansible.builtin.assert:
+        that:
+          - authelia_firstfactor_rejected.json.status == 'KO'
+          - "'set_cookie' not in authelia_firstfactor_rejected"
+        fail_msg: "Authelia did not reject the wrong password: {{ authelia_firstfactor_rejected.json }}"
+        success_msg: "Authelia rejected the wrong password"
+
+    # Authelia does not report its version over HTTP, so it is asked directly.
+    # The docker CLI is used rather than community.docker, which is not
+    # available to playbooks running against the Molecule container.
+    - name: Query the version of the running Authelia
+      ansible.builtin.command:
+        cmd: docker exec authelia /app/authelia --version
+      register: authelia_version_command
+      changed_when: false
+
+    # Authelia reports its version with a leading `v` (`authelia version
+    # v4.37.5`), while the role's version variable carries none. Any leading
+    # `v` is normalized away on both sides, so that this keeps holding if
+    # either side ever starts or stops carrying one.
+    - name: Assert the running Authelia is the version this role installs
+      ansible.builtin.assert:
+        that: >-
+          authelia_version_command.stdout.split()[-1] | regex_replace('^v', '')
+          == authelia_defaults.authelia_version | regex_replace('^v', '')
+        fail_msg: "Authelia reports {{ authelia_version_command.stdout }}, expected {{ authelia_defaults.authelia_version }}"
+        success_msg: "Authelia reports {{ authelia_version_command.stdout }}"
+
+    - name: Show Authelia verification summary
+      ansible.builtin.debug:
+        msg:
+          - "Authelia systemd: {{ authelia_service.status.ActiveState }}"
+          - "Authelia version: {{ authelia_version_command.stdout }}"
+          - "Authelia health: {{ authelia_health.json.status }}"
+          - "Authelia authenticated as: {{ authelia_authenticated_state.json.data.username }}"
+          - "Authelia authentication level: {{ authelia_authenticated_state.json.data.authentication_level }}"
+          - "Authelia wrong-password response: {{ authelia_firstfactor_rejected.status }} {{ authelia_firstfactor_rejected.json.status }}"
