@@ -199,7 +199,7 @@
         fail_msg: "Authelia reports {{ authelia_version_command.stdout | default('none') }}, expected {{ authelia_defaults.authelia_version }}"
         success_msg: "Authelia reports {{ authelia_version_command.stdout }}"
 
-    - name: Show Authelia verification summary
+    - name: Show the Authelia verification summary
       ansible.builtin.debug:
         msg:
           - "Authelia systemd: {{ authelia_service.status.ActiveState }}"
