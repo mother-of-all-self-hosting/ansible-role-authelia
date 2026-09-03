@@ -193,10 +193,6 @@
       register: authelia_version_command
       changed_when: false
 
-    # Authelia reports its version with a leading `v` (`authelia version
-    # v4.37.5`), while the role's version variable carries none. Any leading
-    # `v` is normalized away on both sides, so that this keeps holding if
-    # either side ever starts or stops carrying one.
     - name: Assert the running Authelia is the version this role installs
       ansible.builtin.assert:
         that: >-
