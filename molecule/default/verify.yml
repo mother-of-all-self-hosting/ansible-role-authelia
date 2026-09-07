@@ -71,6 +71,21 @@
         fail_msg: "Authelia is not healthy: {{ authelia_health.json }}"
         success_msg: "Authelia reports itself healthy"
 
+    # Authelia does not report its version over HTTP, so it is asked directly.
+    # The docker CLI is used rather than community.docker, which is not
+    # available to playbooks running against the Molecule container.
+    - name: Query the version of the running Authelia
+      ansible.builtin.command:
+        cmd: docker exec authelia /app/authelia --version
+      register: authelia_version_command
+      changed_when: false
+
+    - name: Assert the running Authelia is the version this role installs
+      ansible.builtin.assert:
+        that: "authelia_version_command.stdout.split()[-1] | regex_replace('^v', '') == authelia_defaults.authelia_version | regex_replace('^v', '')"
+        fail_msg: "Authelia reports {{ authelia_version_command.stdout | default('none') }}, expected {{ authelia_defaults.authelia_version }}"
+        success_msg: "Authelia reports {{ authelia_version_command.stdout }}"
+
     # The login portal is a single-page application served from the same
     # listener. Asking for real content (rather than just a status code) is
     # what tells a serving Authelia apart from one that answers the health
@@ -182,21 +197,6 @@
           - "'set_cookie' not in authelia_firstfactor_rejected"
         fail_msg: "Authelia did not reject the wrong password: {{ authelia_firstfactor_rejected.json }}"
         success_msg: "Authelia rejected the wrong password"
-
-    # Authelia does not report its version over HTTP, so it is asked directly.
-    # The docker CLI is used rather than community.docker, which is not
-    # available to playbooks running against the Molecule container.
-    - name: Query the version of the running Authelia
-      ansible.builtin.command:
-        cmd: docker exec authelia /app/authelia --version
-      register: authelia_version_command
-      changed_when: false
-
-    - name: Assert the running Authelia is the version this role installs
-      ansible.builtin.assert:
-        that: "authelia_version_command.stdout.split()[-1] | regex_replace('^v', '') == authelia_defaults.authelia_version | regex_replace('^v', '')"
-        fail_msg: "Authelia reports {{ authelia_version_command.stdout | default('none') }}, expected {{ authelia_defaults.authelia_version }}"
-        success_msg: "Authelia reports {{ authelia_version_command.stdout }}"
 
     - name: Show the Authelia verification summary
       ansible.builtin.debug:
