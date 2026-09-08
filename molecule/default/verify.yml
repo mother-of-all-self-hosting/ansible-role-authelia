@@ -77,14 +77,14 @@
     - name: Query the version of the running Authelia
       ansible.builtin.command:
         cmd: docker exec authelia /app/authelia --version
-      register: authelia_version_command
+      register: authelia_version_reported
       changed_when: false
 
     - name: Assert the running Authelia is the version this role installs
       ansible.builtin.assert:
-        that: "authelia_version_command.stdout.split()[-1] | regex_replace('^v', '') == authelia_defaults.authelia_version | regex_replace('^v', '')"
-        fail_msg: "Authelia reports {{ authelia_version_command.stdout | default('none') }}, expected {{ authelia_defaults.authelia_version }}"
-        success_msg: "Authelia reports {{ authelia_version_command.stdout }}"
+        that: "authelia_version_reported.stdout.split()[-1] | regex_replace('^v', '') == authelia_defaults.authelia_version | regex_replace('^v', '')"
+        fail_msg: "Authelia reports {{ authelia_version_reported.stdout | default('none') }}, expected {{ authelia_defaults.authelia_version }}"
+        success_msg: "Authelia reports {{ authelia_version_reported.stdout }}"
 
     # The login portal is a single-page application served from the same
     # listener. Asking for real content (rather than just a status code) is
@@ -202,7 +202,7 @@
       ansible.builtin.debug:
         msg:
           - "Authelia systemd: {{ authelia_service.status.ActiveState }}"
-          - "Authelia version: {{ authelia_version_command.stdout }}"
+          - "Authelia version: {{ authelia_version_reported.stdout }}"
           - "Authelia health: {{ authelia_health.json.status }}"
           - "Authelia authenticated as: {{ authelia_authenticated_state.json.data.username }}"
           - "Authelia authentication level: {{ authelia_authenticated_state.json.data.authentication_level }}"
