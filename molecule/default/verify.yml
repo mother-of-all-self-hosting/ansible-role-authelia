@@ -47,7 +47,7 @@
     - name: Retrieve the Authelia systemd service log for debugging
       when: authelia_debug_service_enabled | bool
       ansible.builtin.command:
-        cmd: journalctl -xeu authelia.service
+        cmd: journalctl --no-pager --output=cat --unit=authelia.service
       changed_when: false
 
     - name: Wait for the Authelia health endpoint to report OK (up to 180s)
