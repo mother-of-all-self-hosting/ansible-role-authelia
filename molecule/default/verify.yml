@@ -12,6 +12,8 @@
   vars:
     authelia_molecule_base_url: "http://127.0.0.1:{{ authelia_molecule_bind_port }}"
   tasks:
+    - name: Verify that Authelia works
+      block:
     # The role is not included in this playbook, so its defaults are not in
     # scope. Reading defaults/main.yml directly ties the version assertion
     # below.
@@ -207,3 +209,19 @@
           - "Authelia authenticated as: {{ authelia_authenticated_state.json.data.username }}"
           - "Authelia authentication level: {{ authelia_authenticated_state.json.data.authentication_level }}"
           - "Authelia wrong-password response: {{ authelia_firstfactor_rejected.status }} {{ authelia_firstfactor_rejected.json.status }}"
+
+      rescue:
+        # Whatever went wrong, the reason is almost always in the systemd service log.
+        - name: Retrieve the Authelia systemd service log
+          ansible.builtin.command:
+            cmd: journalctl --no-pager --output=cat --unit=authelia.service
+          register: authelia_service_log
+          changed_when: false
+
+        - name: Show the Authelia systemd service log
+          ansible.builtin.debug:
+            var: authelia_service_log.stdout_lines
+
+        - name: Fail because verification did not pass
+          ansible.builtin.fail:
+            msg: "Authelia verification failed. The systemd service log is printed above."
