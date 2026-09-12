@@ -61,7 +61,7 @@
           ansible.builtin.include_vars:
             file: "{{ lookup('env', 'MOLECULE_SCENARIO_DIRECTORY') }}/vars/credentials.yml"
 
-        - name: Wait for the Authelia health endpoint to report OK (up to 180s)
+        - name: Wait for Authelia to report itself healthy (up to 180s)
           ansible.builtin.uri:
             url: "{{ authelia_molecule_base_url }}/api/health"
             method: GET
@@ -75,11 +75,14 @@
           until: authelia_health.status == 200 and authelia_health.json.status == 'OK'
           retries: 36
           delay: 5
+          # So that giving up is reported by the assertion below rather than as a
+          # wall of systemd unit properties.
+          failed_when: false
 
         - name: Assert Authelia reports itself healthy
           ansible.builtin.assert:
             that: authelia_health.json.status == 'OK'
-            fail_msg: "Authelia is not healthy: {{ authelia_health.json }}"
+            fail_msg: "Authelia did not report itself healthy: {{ authelia_health.json | default('no response') }}"
             success_msg: "Authelia reports itself healthy"
 
         # Authelia does not report its version over HTTP, so it is asked directly.
