@@ -31,6 +31,7 @@ provisioner:
       all:
         # Helper variables
         authelia_debug_service_enabled: false
+        authelia_restarts_check_enabled: true
 
         # The port on the host that the Authelia portal is published on. The
         # role itself does not publish it (Authelia is meant to be reached
