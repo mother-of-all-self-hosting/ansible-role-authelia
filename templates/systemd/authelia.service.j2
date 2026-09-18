@@ -35,7 +35,10 @@ ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} create \
       {% for arg in authelia_container_extra_arguments %}
       {{ arg }} \
       {% endfor %}
-      {{ authelia_container_image }}
+      {{ authelia_container_image }} \
+      {% for arg in authelia_process_extra_arguments %}
+      {{ arg }} \
+      {% endfor %}
 
 {% for network in authelia_container_additional_networks %}
 ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} network connect {{ network }} {{ authelia_identifier }}

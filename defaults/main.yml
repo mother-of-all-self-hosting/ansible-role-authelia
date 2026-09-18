@@ -113,6 +113,12 @@ authelia_container_extra_arguments: "{{ authelia_container_extra_arguments_auto 
 authelia_container_extra_arguments_auto: []
 authelia_container_extra_arguments_custom: []
 
+# A list of extra arguments to pass to the process inside the container
+# Example: ['--SOME_ARGUMENT']
+authelia_process_extra_arguments: "{{ authelia_process_extra_arguments_auto + authelia_process_extra_arguments_custom }}"
+authelia_process_extra_arguments_auto: []
+authelia_process_extra_arguments_custom: []
+
 # Specifies how often the container health-check will run.
 #
 # For Traefik based setups, it's important that the interval is short,
