@@ -114,14 +114,19 @@
 
         - name: Assert the Authelia login portal renders
           ansible.builtin.assert:
-            that: "'<title>Login - Authelia</title>' in authelia_portal.content"
+            that:
+              - "'<div id=\"root\"></div>' in authelia_portal.content"
+              - "'Authelia' in authelia_portal.content"
             fail_msg: "The Authelia login portal did not render as expected"
             success_msg: "The Authelia login portal renders"
-
         # Reports the configuration Authelia is actually running with, which is
         # what ties the served instance back to the values this role templated.
         - name: Query the anonymous Authelia session state
           ansible.builtin.uri:
+            headers:
+              Host: "{{ authelia_hostname }}"
+              X-Forwarded-Host: "{{ authelia_hostname }}"
+              X-Forwarded-Proto: https
             url: "{{ authelia_molecule_base_url }}/api/state"
             method: GET
             follow_redirects: none
@@ -144,6 +149,10 @@
         - name: Authenticate against Authelia with the test user's credentials
           ansible.builtin.uri:
             url: "{{ authelia_molecule_base_url }}/api/firstfactor"
+            headers:
+              Host: "{{ authelia_hostname }}"
+              X-Forwarded-Host: "{{ authelia_hostname }}"
+              X-Forwarded-Proto: https
             method: POST
             body_format: json
             body:
@@ -172,11 +181,14 @@
         # and that the display data came out of the user database the role wrote.
         - name: Query the Authelia session state with the session cookie
           ansible.builtin.uri:
+            headers:
+              Host: "{{ authelia_hostname }}"
+              X-Forwarded-Host: "{{ authelia_hostname }}"
+              X-Forwarded-Proto: https
+              Cookie: "{{ authelia_molecule_session_cookie }}"
             url: "{{ authelia_molecule_base_url }}/api/state"
             method: GET
             follow_redirects: none
-            headers:
-              Cookie: "{{ authelia_molecule_session_cookie }}"
             return_content: true
           register: authelia_authenticated_state
 
@@ -192,6 +204,10 @@
         # waved everyone through would pass every assertion so far.
         - name: Attempt to authenticate against Authelia with a wrong password
           ansible.builtin.uri:
+            headers:
+              Host: "{{ authelia_hostname }}"
+              X-Forwarded-Host: "{{ authelia_hostname }}"
+              X-Forwarded-Proto: https
             url: "{{ authelia_molecule_base_url }}/api/firstfactor"
             method: POST
             body_format: json
