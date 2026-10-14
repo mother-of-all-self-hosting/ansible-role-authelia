@@ -50,6 +50,18 @@
               {{ dict(authelia_verify_units | zip(authelia_services.results | map(attribute='status.ActiveState'))) }}
             success_msg: "Every systemd service is active"
 
+        - name: Validate the generated Authelia configuration
+          ansible.builtin.command:
+            cmd: docker exec authelia authelia config validate --config /config/configuration.yml
+          register: authelia_config_validation
+          changed_when: false
+
+        - name: Assert the generated configuration has no deprecated options
+          ansible.builtin.assert:
+            that:
+              - "'deprecated' not in (authelia_config_validation.stdout ~ authelia_config_validation.stderr) | lower"
+            fail_msg: "{{ authelia_config_validation.stdout }} {{ authelia_config_validation.stderr }}"
+
         - name: Retrieve the Authelia systemd services log for debugging
           when: authelia_debug_service_enabled | bool
           ansible.builtin.command:
@@ -138,7 +150,8 @@
             that:
               - authelia_anonymous_state.json.data.username == ''
               - authelia_anonymous_state.json.data.authentication_level == 0
-              - authelia_anonymous_state.json.data.default_redirection_url == 'https://' ~ authelia_hostname ~ '/'
+              # The new cookie configuration omits redirects back to the portal itself.
+              - authelia_anonymous_state.json.data.default_redirection_url is not defined
             fail_msg: "Authelia is not running with the expected configuration: {{ authelia_anonymous_state.json.data }}"
             success_msg: "Authelia runs with the configuration this role generated"
 
