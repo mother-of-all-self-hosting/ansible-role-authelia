@@ -14,9 +14,77 @@
     - { "old": "authelia_config_session_redis_host", "new": "authelia_config_session_redis_hostname" }
     - { "old": "authelia_config_storage_mysql_host", "new": "authelia_config_storage_mysql_hostname" }
     - { "old": "authelia_config_storage_postgres_host", "new": "authelia_config_storage_postgres_hostname" }
-    - { "old": "authelia_container_labels_traefik_forwardAuth_address_rd", "new": "authelia_container_labels_traefik_forwardauth_address_rd" }
+    - { "old": "authelia_container_labels_traefik_forwardAuth_address_rd", "new": "authelia_config_session_authelia_url" }
+    - { "old": "authelia_container_labels_traefik_forwardauth_address_rd", "new": "authelia_config_session_authelia_url" }
     - { "old": "authelia_http_header_content_permission_policy", "new": "authelia_http_header_permissions_policy" }
     - { "old": "authelia_container_image_force_pull", "new": "<removed> (the new community.docker.docker_image_pull module handles this natively)" }
+
+- name: (Deprecation) Catch and report outdated custom configuration
+  ansible.builtin.fail:
+    msg: >-
+      Your custom Authelia configuration contains the deprecated option `{{ item.old }}`.
+      Please update `authelia_configuration_extension_yaml` or `authelia_configuration_yaml`
+      to use `{{ item.new }}` instead.
+  vars:
+    authelia_validation_config_path: "{{ item.old.split('.') }}"
+    authelia_validation_config_parent: >-
+      {{ authelia_configuration if authelia_validation_config_path | length == 1 else
+         authelia_configuration.get(authelia_validation_config_path[0], {}) if authelia_validation_config_path | length == 2 else
+         authelia_configuration.get(authelia_validation_config_path[0], {}).get(authelia_validation_config_path[1], {}) }}
+  when: authelia_validation_config_path[-1] in authelia_validation_config_parent
+  with_items:
+    - { "old": "jwt_secret", "new": "identity_validation.reset_password.jwt_secret" }
+    - { "old": "default_redirection_url", "new": "session.cookies[].default_redirection_url" }
+    - { "old": "session.domain", "new": "session.cookies[].domain (include authelia_url in each cookie entry)" }
+    - { "old": "session.remember_me_duration", "new": "session.remember_me" }
+    - { "old": "server.host", "new": "server.address" }
+    - { "old": "server.port", "new": "server.address" }
+    - { "old": "server.path", "new": "server.address" }
+    - { "old": "server.enable_pprof", "new": "server.endpoints.enable_pprof" }
+    - { "old": "server.enable_expvars", "new": "server.endpoints.enable_expvars" }
+    - { "old": "authentication_backend.ldap.url", "new": "authentication_backend.ldap.address" }
+    - { "old": "authentication_backend.ldap.username_attribute", "new": "authentication_backend.ldap.attributes.username" }
+    - { "old": "authentication_backend.ldap.mail_attribute", "new": "authentication_backend.ldap.attributes.mail" }
+    - { "old": "authentication_backend.ldap.display_name_attribute", "new": "authentication_backend.ldap.attributes.display_name" }
+    - { "old": "authentication_backend.ldap.group_name_attribute", "new": "authentication_backend.ldap.attributes.group_name" }
+    - { "old": "storage.mysql.host", "new": "storage.mysql.address" }
+    - { "old": "storage.mysql.port", "new": "storage.mysql.address" }
+    - { "old": "storage.postgres.host", "new": "storage.postgres.address" }
+    - { "old": "storage.postgres.port", "new": "storage.postgres.address" }
+    - { "old": "notifier.smtp.host", "new": "notifier.smtp.address" }
+    - { "old": "notifier.smtp.port", "new": "notifier.smtp.address" }
+    - { "old": "identity_providers.oidc.issuer_private_key", "new": "identity_providers.oidc.jwks[].key" }
+    - { "old": "identity_providers.oidc.issuer_certificate_chain", "new": "identity_providers.oidc.jwks[].certificate_chain" }
+    - { "old": "identity_providers.oidc.access_token_lifespan", "new": "identity_providers.oidc.lifespans.access_token" }
+    - { "old": "identity_providers.oidc.authorize_code_lifespan", "new": "identity_providers.oidc.lifespans.authorize_code" }
+    - { "old": "identity_providers.oidc.id_token_lifespan", "new": "identity_providers.oidc.lifespans.id_token" }
+    - { "old": "identity_providers.oidc.refresh_token_lifespan", "new": "identity_providers.oidc.lifespans.refresh_token" }
+    - { "old": "webauthn.user_verification", "new": "webauthn.selection_criteria.user_verification" }
+
+- name: (Deprecation) Catch and report outdated OpenID Connect client configuration
+  ansible.builtin.fail:
+    msg: >-
+      Client #{{ item + 1 }} in your Authelia configuration uses deprecated option names.
+      Update `authelia_config_identity_providers_oidc_clients` or the clients in your custom YAML:
+      `id` -> `client_id`, `description` -> `client_name`, `secret` -> `client_secret`,
+      `userinfo_signing_algorithm` -> `userinfo_signed_response_alg`, `sector_identifier` -> `sector_identifier_uri`.
+  vars:
+    authelia_validation_clients: "{{ authelia_configuration.get('identity_providers', {}).get('oidc', {}).get('clients', []) }}"
+  when: authelia_validation_clients[item].keys() | intersect(['id', 'description', 'secret', 'userinfo_signing_algorithm', 'sector_identifier']) | length > 0
+  loop: "{{ range(authelia_configuration.get('identity_providers', {}).get('oidc', {}).get('clients', []) | length) | list }}"
+
+- name: (Deprecation) Fail if an OpenID Connect sector identifier needs migration
+  ansible.builtin.fail:
+    msg: >-
+      Client #{{ item + 1 }} has a sector identifier which is not an HTTPS URI.
+      Replace `sector_identifier` with `sector_identifier_uri` pointing to an HTTPS JSON document
+      containing the client's redirect URIs, or remove it if pairwise subject identifiers are not needed.
+      See https://www.authelia.com/configuration/identity-providers/openid-connect/clients/#sector_identifier_uri
+  vars:
+    authelia_validation_clients: "{{ authelia_configuration.get('identity_providers', {}).get('oidc', {}).get('clients', []) }}"
+    authelia_validation_sector_identifier: "{{ authelia_validation_clients[item].get('sector_identifier_uri', '') }}"
+  when: authelia_validation_sector_identifier != '' and not authelia_validation_sector_identifier.startswith('https://')
+  loop: "{{ range(authelia_configuration.get('identity_providers', {}).get('oidc', {}).get('clients', []) | length) | list }}"
 
 - name: Fail if required Authelia settings not defined
   ansible.builtin.fail:
@@ -31,9 +99,40 @@
     - authelia_path_prefix
     - authelia_container_network
     - authelia_config_jwt_secret
-    - authelia_config_session_domain
     - authelia_config_session_secret
     - authelia_config_storage_encryption_key
+
+- name: Fail if no session cookies are configured
+  ansible.builtin.fail:
+    msg: >-
+      You need to configure at least one entry in `authelia_config_session_cookies`.
+      Set `authelia_config_session_domain` for the default entry, or configure
+      `authelia_config_session_cookies_auto` and `authelia_config_session_cookies_custom`.
+  when: authelia_configuration.get('session', {}).get('cookies', []) | length == 0
+
+- name: Fail if a session cookie is missing required settings
+  ansible.builtin.fail:
+    msg: >-
+      Session cookie #{{ item + 1 }} requires both `domain` and `authelia_url`.
+      Set `authelia_config_session_domain` and `authelia_config_session_authelia_url` for the default entry,
+      or update the entries in `authelia_config_session_cookies` or your custom YAML.
+  vars:
+    authelia_validation_cookie: "{{ authelia_configuration.session.cookies[item] }}"
+  when: authelia_validation_cookie.get('domain', '') == '' or authelia_validation_cookie.get('authelia_url', '') == ''
+  loop: "{{ range(authelia_configuration.session.cookies | length) | list }}"
+
+- name: Fail if a session cookie redirects to the Authelia portal
+  ansible.builtin.fail:
+    msg: >-
+      Session cookie #{{ item + 1 }} has a `default_redirection_url` equal to its `authelia_url`.
+      Leave `authelia_config_default_redirection_url` empty for the default entry,
+      or remove or change `default_redirection_url` in the cookie entry.
+  vars:
+    authelia_validation_cookie: "{{ authelia_configuration.session.cookies[item] }}"
+  when:
+    - authelia_validation_cookie.get('default_redirection_url', '') != ''
+    - authelia_validation_cookie.default_redirection_url | trim('/') == authelia_validation_cookie.authelia_url | trim('/')
+  loop: "{{ range(authelia_configuration.session.cookies | length) | list }}"
 
 - name: Fail if encryption key is too short
   ansible.builtin.fail:
@@ -46,7 +145,7 @@
       Authelia requires either the SMTP notifier or filesystem-based notifier configured.
       You need to set either `authelia_config_notifier_filesystem_filename` or
       a bunch of `authelia_config_notifier_smtp_*` variables.
-  when: "authelia_config_notifier_filesystem_filename == '' and authelia_config_notifier_smtp_host == ''"
+  when: "authelia_config_notifier_filesystem_filename == '' and authelia_config_notifier_smtp_address == ''"
 
 # We only check that at least one authentication backend is enabled.
 # Enabling multiple will cause a problem at runtime, but our validation logic does not cover this edge case.
@@ -67,7 +166,7 @@
       You need to set either `authelia_config_storage_local_path` or
       a bunch of `authelia_config_storage_mysql_*` variables or
       a bunch of `authelia_config_storage_postgres_*` variables.
-  when: "authelia_config_authentication_backend_file_path == '' and authelia_config_storage_mysql_hostname == '' and authelia_config_storage_postgres_hostname == ''"
+  when: "authelia_config_storage_local_path == '' and authelia_config_storage_mysql_address == '' and authelia_config_storage_postgres_address == ''"
 
 - name: Fail if OpenID Connect enabled, but required authelia_config_identity_providers_oidc_issuer_private_key is not set
   ansible.builtin.fail:
