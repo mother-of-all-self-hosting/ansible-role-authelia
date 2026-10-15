@@ -228,6 +228,36 @@ You will need to create a shared secret and hash its value (e.g. `php -r 'echo p
 
 Finally, configure your application, hooking it to Authelia's OpenID Connect identity provider. Refer to the [sample configuration](https://github.com/mother-of-all-self-hosting/ansible-role-grafana/blob/main/docs/configuring-grafana.md#authelia) for details.
 
+### Configuring authentication storage providers
+
+Authelia supports [file-based](https://www.authelia.com/configuration/first-factor/file/) and [LDAP](https://www.authelia.com/configuration/first-factor/ldap/) storage providers for the user database.
+
+To enable the file-based provider, add the following configuration to your `vars.yml` file (adapt to your needs):
+
+```yaml
+authelia_config_authentication_backend_file_content: |
+  ---
+  users:
+    john:
+      disabled: false
+      displayname: John Doe
+      password: PASSWORD_HASH_HERE
+      email: john@example.com
+      groups:
+        - admins
+        - dev
+    peter:
+      disabled: false
+      displayname: Peter Johnson
+      password: PASSWORD_HASH_HERE
+      email: peter@example.com
+      groups:
+        - dev
+  ...
+```
+
+To use LDAP, define `authelia_config_authentication_backend_ldap_*` variables instead.
+
 ### Extending the configuration
 
 There are some additional things you may wish to configure about the service.
