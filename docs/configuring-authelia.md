@@ -135,16 +135,30 @@ authelia_database_mysql_socket_enabled: false
 authelia_database_postgres_socket_enabled: false
 ```
 
-### Configuring cache (optional)
+### Configuring a Redis database (optional)
+
+You can optionally enable a [Redis](https://redis.io/) database for the Authelia instance. [Valkey](https://valkey.io/) can also be used instead.
+
+>[!WARNING]
+> If Redis configuration is not specified, session information is stored in memory, and restarting the process will destroy all user sessions.
+
+To enable the Redis database for Authelia, add the following configuration to your `vars.yml` file. Note that the role is by default configured to establish connection with the Redis database via the Unix socket.
 
 ```yaml
-authelia_redis_hostname: YOUR_REDIS_SERVER_HOSTNAME_HERE
-authelia_redis_port: 6379
-authelia_redis_password: YOUR_REDIS_SERVER_PASSWORD_HERE
-authelia_redis_database: 0
+# Specify the path to the Redis Unix socket path on the host (bind-mount source)
+authelia_redis_socket_path_host: ""
 ```
 
-Make sure to replace `YOUR_REDIS_SERVER_HOSTNAME_HERE` and `YOUR_REDIS_SERVER_PASSWORD_HERE` with your own values.
+If TCP connection is preferred, connection via the Unix socket can be disabled by adding the following configuration to your `vars.yml` file:
+
+```yaml
+# Disable the connection to Redis via a Unix socket
+authelia_redis_socket_enabled: false
+
+authelia_redis_hostname: YOUR_REDIS_SERVER_HOSTNAME_HERE
+```
+
+Make sure to replace `YOUR_REDIS_SERVER_HOSTNAME_HERE` with your own value.
 
 If you are looking for an Ansible role for Redis, you can check out [ansible-role-redis](https://github.com/mother-of-all-self-hosting/ansible-role-redis) maintained by the [Mother-of-All-Self-Hosting (MASH)](https://github.com/mother-of-all-self-hosting) team. The role for Valkey ([ansible-role-valkey](https://github.com/mother-of-all-self-hosting/ansible-role-valkey)) is available as well.
 
