@@ -174,6 +174,64 @@ authelia_config_access_control_rules:
 
 Refer to [`templates/configuration.yml.j2`](../templates/configuration.yml.j2) for details about how to set it up.
 
+### Modes of operation
+
+Authelia has 2 [modes of operation](#modes-of-operation) which can be enabled simultaneously:
+
+- **Forward-Auth**: [Forward-Auth](https://doc.traefik.io/traefik/middlewares/http/forwardauth/) is useful for protecting services which are not aware of authentication at all or which can receive authentication/authorization data via [HTTP headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers). Forward-Auth can act as a replacement for [HTTP Basic Authentication](https://en.wikipedia.org/wiki/Basic_access_authentication). It does this by acting as a companion to [common reverse proxies](https://www.authelia.com/overview/prologue/supported-proxies/), like [Traefik](traefik.md) which is frequently used by this playbook. To learn more, refer to [Protecting a service with Authelia's forward-auth](#protecting-a-service-with-authelias-forward-auth)
+
+- **OpenID Connect**: experimental OpenID Connect support support, so that services which are OpenID Connect-compatible can use Authelia as an identity provider. To learn more, refer to [Protecting a service with OpenID Connect](#protecting-a-service-with-openid-connect)
+
+#### Protecting a service with Authelia's forward-auth
+
+If you're using [Traefik](traefik.md), you can easily protect services running on the same host by adding additional Traefik labels to them.
+
+[Forward-Auth](https://doc.traefik.io/traefik/middlewares/http/forwardauth/) is useful for protecting services which are not aware of authentication at all or which can receive authentication/authorization data via [HTTP headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers).
+
+Here's an example configuration for [Hubsite](hubsite.md) (a service which does not support authentication at all):
+
+```yaml
+hubsite_container_labels_additional_labels_custom:
+  - traefik.http.routers.{{ hubsite_identifier }}.middlewares={{ authelia_identifier }}@docker
+```
+
+The Hubsite component does not use any Traefik middlewares, so defining a `.middlewares` configuration key and pointing it to the Authelia middleware works well.
+
+For most other components, middlewares are in use in their default Traefik labels, so adding an additional `.middlewares` key will not work. You may need to inject additional middlewares on top of the default ones. Not all components may (yet) have a variable for doing so. Consider contributing to various roles to allow additional middlewares to be injected dynamically!
+
+#### Protecting a service with OpenID Connect
+
+For services which support OpenID Connect, you can enable the [experimental OpenID Connect identity provider](https://www.authelia.com/configuration/identity-providers/open-id-connect/) in Authelia.
+
+You will need some additional configuration like this:
+
+```yaml
+authelia_config_identity_providers_oidc_clients:
+  - id: grafana
+    description: Grafana
+    secret: HASH_OF_THE_SHARED_SECRET
+    public: false
+    authorization_policy: one_factor
+    redirect_uris:
+      - https://mash.example.com/grafana/login/generic_oauth
+    scopes:
+      - openid
+      - profile
+      - groups
+      - email
+    userinfo_signing_algorithm: none
+
+authelia_config_identity_providers_oidc_issuer_private_key: |
+  KEY CONTENT GOES HERE.
+  TO GENERATE A KEY, USE: `openssl genpkey -algorithm RSA -out FILE_NAME`
+```
+
+The example configuration above configures a single OpenID Connect client (application) called `grafana` (see the [Grafana](grafana.md) service supported by this playbook), which supposedly lives at the base URL of `https://mash.example.com/grafana`.
+
+You will need to create a shared secret and hash its value (e.g. `php -r 'echo password_hash("PASSWORD_HERE",  PASSWORD_ARGON2ID);'`). Feel free to use another language (or tool) for creating a hash as well. A few different hash algorithms are supported besides Argon2id.
+
+Finally, configure your application, hooking it to Authelia's OpenID Connect identity provider. You can get inspired by the [sample configuration](grafana.md#single-sign-on--authelia) we have created for [Grafana](grafana.md).
+
 ### Extending the configuration
 
 There are some additional things you may wish to configure about the service.
