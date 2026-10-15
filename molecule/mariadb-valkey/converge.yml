@@ -21,7 +21,7 @@
       loop:
         - com.devture.ansible.role.playbook_help
         - com.devture.ansible.role.systemd_docker_base
-        - ansible-role-postgres
+        - ansible-role-mariadb
         - ansible-role-valkey
         - "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') | basename }}"
       loop_control:
@@ -36,9 +36,9 @@
       ansible.builtin.systemd_service:
         daemon_reload: true
 
-    - name: Ensure Postgres systemd service is started
+    - name: Ensure MariaDB systemd service is started
       ansible.builtin.systemd_service:
-        name: postgres.service
+        name: mariadb.service
         state: started
 
     - name: Ensure Valkey systemd service is started

@@ -13,7 +13,7 @@ dependency:
 driver:
   name: docker
 platforms:
-  - name: authelia-${MOLECULE_DISTRO:-ubuntu2604}-postgres-valkey
+  - name: authelia-${MOLECULE_DISTRO:-ubuntu2604}-mariadb-valkey
     image: "geerlingguy/docker-${MOLECULE_DISTRO:-ubuntu2604}-ansible:latest"
     command: ${MOLECULE_DOCKER_COMMAND:-""}
     volumes:
@@ -68,16 +68,16 @@ provisioner:
         authelia_container_extra_arguments_custom:
           - "-p 127.0.0.1:{{ authelia_molecule_bind_port }}:9091"
 
-        # Variables required for Forgejo to connect to the Postgres database (via Unix socket)
-        authelia_database_type: postgres
-        authelia_database_postgres_username: my_database_username
-        authelia_database_postgres_password: my_database_password
+        # Variables required for Forgejo to connect to the MariaDB database (via Unix socket)
+        authelia_database_type: mysql
+        authelia_database_mysql_username: my_database_username
+        authelia_database_mysql_password: my_database_password
         authelia_database_name: authelia
-        authelia_database_postgres_socket_enabled: true
-        authelia_database_postgres_socket_path_host: "{{ postgres_run_path }}"
+        authelia_database_mysql_socket_enabled: true
+        authelia_database_mysql_socket_path_host: "{{ mariadb_run_path }}"
         authelia_systemd_required_services_list_auto: |
           {{
-            (['postgres.service'])
+            (['mariadb.service'])
           }}
 
         # Variables required for Forgejo to connect to the Valkey data-store
@@ -99,17 +99,17 @@ provisioner:
         # `converge.yml` and `verify.yml` read them from `vars/credentials.yml`
         # instead, where nothing interpolates them.
 
-        # Variables for Postgres
-        postgres_uid: 1000
-        postgres_gid: 1000
-        postgres_connection_password: postgres_password
-        postgres_container_unix_socket_enabled: true
-        postgres_managed_databases: |
+        # Variables for MariaDB
+        mariadb_uid: 1000
+        mariadb_gid: 1000
+        mariadb_root_password: mariadb_password
+        mariadb_container_unix_socket_enabled: true
+        mariadb_managed_databases: |
           {{
             [{
               'name': authelia_database_name,
-              'username': authelia_database_postgres_username,
-              'password': authelia_database_postgres_password,
+              'username': authelia_database_mysql_username,
+              'password': authelia_database_mysql_password,
             }]
           }}
 
@@ -130,7 +130,7 @@ scenario:
     - create
     - prepare
     - converge
-    # Disable idempotence test for now due to ansible-role-postgres
+    # Disable idempotence test for now due to ansible-role-mariadb
     # - idempotence
     - side_effect
     - verify

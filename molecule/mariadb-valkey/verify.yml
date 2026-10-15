@@ -15,7 +15,7 @@
 
     authelia_verify_units:
       - authelia.service
-      - postgres.service
+      - mariadb.service
       - valkey.service
 
   tasks:
