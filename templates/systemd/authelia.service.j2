@@ -1,5 +1,8 @@
 {#
-SPDX-FileCopyrightText: 2023 Slavi Pantaleev
+SPDX-FileCopyrightText: 2023 MASH project contributors
+SPDX-FileCopyrightText: 2023-2025 Slavi Pantaleev
+SPDX-FileCopyrightText: 2024 Nikita Chernyi
+SPDX-FileCopyrightText: 2025, 2026 Suguru Hirahara
 
 SPDX-License-Identifier: AGPL-3.0-or-later
 #}
@@ -33,6 +36,12 @@ ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} create \
       --mount type=bind,src={{ authelia_data_path }},dst=/data \
       {% if authelia_redis_socket_enabled and authelia_redis_socket_path_host != '' %}
       --mount type=bind,src={{ authelia_redis_socket_path_host }},dst={{ authelia_redis_socket_path_container }} \
+      {% endif %}
+      {% if authelia_database_type == 'mysql' and authelia_database_mysql_socket_enabled and authelia_database_mysql_socket_path_host != '' %}
+      --mount type=bind,src={{ authelia_database_mysql_socket_path_host }},dst={{ authelia_database_mysql_socket_path_container }} \
+      {% endif %}
+      {% if authelia_database_type == 'postgres' and authelia_database_postgres_socket_enabled and authelia_database_postgres_socket_path_host != '' %}
+      --mount type=bind,src={{ authelia_database_postgres_socket_path_host }},dst={{ authelia_database_postgres_socket_path_container }} \
       {% endif %}
       --health-interval={{ authelia_container_health_interval }} \
       {% for arg in authelia_container_extra_arguments %}

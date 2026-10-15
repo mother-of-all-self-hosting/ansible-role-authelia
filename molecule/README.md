@@ -53,6 +53,14 @@ Besides checking that Authelia serves its health endpoint and its login portal, 
 
 The user's credentials live in `molecule/default/vars/credentials.yml` rather than in `molecule/default/molecule.yml`, because Molecule expands anything that looks like an environment variable in the latter, and an argon2id password hash is full of dollar signs.
 
+### `mariadb-valkey`
+
+Tests a standard Authelia installation with the MariaDB database and the Valkey data-store.
+
+### `postgres-valkey`
+
+Tests a standard Authelia installation with the Postgres database and the Valkey data-store.
+
 ## Running
 
 By default it is configured to run the scenarios on Ubuntu 26.04.

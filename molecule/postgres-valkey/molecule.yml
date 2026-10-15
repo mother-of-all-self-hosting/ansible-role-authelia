@@ -1,0 +1,140 @@
+# SPDX-FileCopyrightText: 2026 Slavi Pantaleev
+# SPDX-FileCopyrightText: 2026 spatterlight
+# SPDX-FileCopyrightText: 2026 Suguru Hirahara
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+---
+dependency:
+  name: galaxy
+  options:
+    requirements-file: requirements.yml
+    force: true
+driver:
+  name: docker
+platforms:
+  - name: authelia-${MOLECULE_DISTRO:-ubuntu2604}-postgres-valkey
+    image: "geerlingguy/docker-${MOLECULE_DISTRO:-ubuntu2604}-ansible:latest"
+    command: ${MOLECULE_DOCKER_COMMAND:-""}
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+      # Docker inside the instance stores images via containerd. Its storage
+      # cannot use overlay on top of the instance's own overlay filesystem, so a
+      # volume puts it on a real filesystem.
+      - /var/lib/containerd
+    # Remove volumes along with the instance, so that local runs do not leave
+    # gigabytes behind.
+    keep_volumes: false
+    cgroupns_mode: host
+    privileged: true
+    pre_build_image: true
+provisioner:
+  name: ansible
+  playbooks:
+    prepare: ../default/prepare.yml
+  config_options:
+    defaults:
+      callback_result_format: yaml
+  inventory:
+    group_vars:
+      all:
+        # Helper variables
+        authelia_debug_service_enabled: false
+        authelia_restarts_check_enabled: true
+
+        # The port on the host that the Authelia portal is published on. The
+        # role itself does not publish it (Authelia is meant to be reached
+        # through a reverse-proxy), so the scenario publishes it via
+        # `authelia_container_extra_arguments_custom` below.
+        authelia_molecule_bind_port: 9091
+
+        # Variables for Authelia
+        authelia_uid: 1000
+        authelia_gid: 1000
+        authelia_hostname: auth.example.com
+        authelia_container_labels_traefik_enabled: false
+
+        # Authelia refuses to start when the redirection URL it is configured
+        # with is not on (a subdomain of) the session domain. The role derives
+        # the redirection URL from `authelia_hostname`, so the two must agree.
+        authelia_config_session_domain: example.com
+
+        # Throwaway secrets for this scenario only. The storage encryption key
+        # must be at least 20 characters long, which the role also validates.
+        authelia_config_jwt_secret: molecule-jwt-secret-molecule-jwt-secret
+        authelia_config_session_secret: molecule-session-secret-molecule-session-secret
+        authelia_config_storage_encryption_key: molecule-storage-encryption-key
+
+        authelia_container_extra_arguments_custom:
+          - "-p 127.0.0.1:{{ authelia_molecule_bind_port }}:9091"
+
+        # Variables required for Forgejo to connect to the Postgres database (via Unix socket)
+        authelia_database_type: postgres
+        authelia_database_postgres_username: my_database_username
+        authelia_database_postgres_password: my_database_password
+        authelia_database_name: authelia
+        authelia_database_postgres_socket_enabled: true
+        authelia_database_postgres_socket_path_host: "{{ postgres_run_path }}"
+        authelia_systemd_required_services_list_auto: |
+          {{
+            (['postgres.service'])
+          }}
+
+        # Variables required for Forgejo to connect to the Valkey data-store
+        authelia_redis_socket_path_host: "{{ valkey_run_path }}"
+        authelia_systemd_required_services_list_custom:
+          - "{{ valkey_identifier }}.service"
+
+        # Authelia checks the clock against a public NTP server on startup and
+        # logs an error when it cannot reach one. Disabling that check keeps
+        # the scenario self-contained, and exercises the role's configuration
+        # extension mechanism at the same time.
+        authelia_configuration_extension_yaml: |
+          ntp:
+            disable_startup_check: true
+
+        # The test user's credentials are deliberately NOT defined here.
+        # An argon2id password hash is full of dollar signs, and Molecule
+        # expands anything looking like an environment variable in this file.
+        # `converge.yml` and `verify.yml` read them from `vars/credentials.yml`
+        # instead, where nothing interpolates them.
+
+        # Variables for Postgres
+        postgres_uid: 1000
+        postgres_gid: 1000
+        postgres_connection_password: postgres_password
+        postgres_container_unix_socket_enabled: true
+        postgres_managed_databases: |
+          {{
+            [{
+              'name': authelia_database_name,
+              'username': authelia_database_postgres_username,
+              'password': authelia_database_postgres_password,
+            }]
+          }}
+
+        # Variables for Valkey
+        valkey_uid: 1000
+        valkey_gid: 1000
+        valkey_arch: amd64
+  env:
+    # Workaround for https://github.com/ansible/molecule/issues/4391
+    ANSIBLE_ROLES_PATH: ${MOLECULE_PROJECT_DIRECTORY}/..:/.ansible/roles:/usr/share/ansible/roles:/etc/ansible/roles:~/.ansible/roles
+scenario:
+  # See: https://docs.ansible.com/projects/molecule/configuration/?h=test_sequence#scenario
+  test_sequence:
+    - dependency
+    - cleanup
+    - destroy
+    - syntax
+    - create
+    - prepare
+    - converge
+    # Disable idempotence test for now due to ansible-role-postgres
+    # - idempotence
+    - side_effect
+    - verify
+    - cleanup
+    - destroy
+verifier:
+  name: ansible

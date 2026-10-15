@@ -41,6 +41,8 @@ jobs:
           - ubuntu2604
         scenario:
           - default
+          - mariadb-valkey
+          - postgres-valkey
       fail-fast: false
 
     env:

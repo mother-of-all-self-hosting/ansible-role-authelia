@@ -1,8 +1,12 @@
-# SPDX-FileCopyrightText: 2023 - 2024 Nikita Chernyi
-# SPDX-FileCopyrightText: 2023 - 2025 Slavi Pantaleev
+# SPDX-FileCopyrightText: 2023 Antoine-Ali Zarrouk
+# SPDX-FileCopyrightText: 2023, 2024 Nikita Chernyi
+# SPDX-FileCopyrightText: 2023-2025 MASH project contributors
+# SPDX-FileCopyrightText: 2023-2026 Slavi Pantaleev
+# SPDX-FileCopyrightText: 2024 Julian-Samuel Gebühr
 # SPDX-FileCopyrightText: 2024 Sergio Durigan Junior
-# SPDX-FileCopyrightText: 2025 MASH project contributors
-# SPDX-FileCopyrightText: 2025 Suguru Hirahara
+# SPDX-FileCopyrightText: 2025 spatterlight
+# SPDX-FileCopyrightText: 2025, 2026 Suguru Hirahara
+# SPDX-FileCopyrightText: 2026 Timofej Luitle
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -342,23 +346,38 @@ authelia_database_postgres_username: authelia
 authelia_database_postgres_password: ""
 authelia_database_name: authelia
 
-# Derived from hostname/port by default; a hostname starting with / is a Unix socket path.
+# Control if the connection to MySQL is made via a Unix socket
+authelia_database_mysql_socket_enabled: true
+
+# Specify the path to the MySQL Unix socket path on the host (bind-mount source)
+authelia_database_mysql_socket_path_host: ""
+
+# Specify the path to the MySQL Unix socket path inside the Vaultwarden container
+authelia_database_mysql_socket_path_container: /run-mysqld
+
+# Control if the connection to Postgres is made via a Unix socket
+authelia_database_postgres_socket_enabled: true
+
+# Specify the path to the Postgres Unix socket path on the host (bind-mount source)
+authelia_database_postgres_socket_path_host: ""
+
+# Specify the path to the Postgres Unix socket path inside the Vaultwarden container
+authelia_database_postgres_socket_path_container: /run-postgres
+
+# cf. https://www.authelia.com/configuration/storage/mysql/#address
 authelia_config_storage_address_mysql: |-
-  {%- if authelia_database_mysql_hostname.startswith('/') -%}
-  unix://{{ authelia_database_mysql_hostname }}
-  {%- elif authelia_database_mysql_hostname != '' -%}
-  tcp://{{ authelia_database_mysql_hostname }}:{{ authelia_database_mysql_port }}
+  {%- if authelia_database_mysql_socket_enabled -%}
+  unix://{{ authelia_database_mysql_socket_path_container }}/mysqld.sock
   {%- else -%}
-  {{ authelia_database_mysql_hostname }}
+  tcp://{{ authelia_database_mysql_hostname }}:{{ authelia_database_mysql_port }}
   {%- endif -%}
 
+# cf. https://www.authelia.com/configuration/storage/postgres/#address
 authelia_config_storage_address_postgres: |-
-  {%- if authelia_database_postgres_hostname.startswith('/') -%}
-  unix://{{ authelia_database_postgres_hostname }}
-  {%- elif authelia_database_postgres_hostname != '' -%}
-  tcp://{{ authelia_database_postgres_hostname }}:{{ authelia_config_storage_postgres_port }}
+  {%- if authelia_database_postgres_socket_enabled -%}
+  unix://{{ authelia_database_postgres_socket_path_container }}/.s.PGSQL.5432
   {%- else -%}
-  {{ authelia_database_postgres_hostname }}
+  tcp://{{ authelia_database_postgres_hostname }}:{{ authelia_database_postgres_port }}
   {%- endif -%}
 
 ########################################################################

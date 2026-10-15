@@ -1,5 +1,5 @@
 # SPDX-FileCopyrightText: 2023 Slavi Pantaleev
-# SPDX-FileCopyrightText: 2025 Suguru Hirahara
+# SPDX-FileCopyrightText: 2025, 2026 Suguru Hirahara
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -212,6 +212,64 @@
     msg: >-
       authelia_database_type must be 'mysql', 'postgres' or 'sqlite'
   when: "authelia_database_type not in ['mysql', 'postgres', 'sqlite']"
+
+- name: Run if Authelia + MySQL integration is enabled
+  when: authelia_database_type == 'mysql'
+  block:
+    - name: Fail if required Authelia + MySQL integration settings not defined
+      ansible.builtin.fail:
+        msg: >-
+          You need to define a required configuration setting (`{{ item }}`) when `authelia_database_type` is `mysql`
+      when: "lookup('vars', item, default='') | string | length == 0"
+      with_items:
+        - authelia_database_mysql_password
+
+    - name: Fail if MySQL socket host path for Authelia is missing when Unix socket is enabled
+      ansible.builtin.fail:
+        msg: >-
+          You need to define `authelia_database_mysql_socket_path_host` when `authelia_database_type` is `mysql`
+          and `authelia_database_mysql_socket_enabled` is `true`.
+      when: >-
+        authelia_database_mysql_socket_enabled and
+        authelia_database_mysql_socket_path_host | string | length == 0
+
+    - name: Fail if MySQL hostname for Authelia is missing when Unix socket is disabled
+      ansible.builtin.fail:
+        msg: >-
+          You need to define `authelia_database_mysql_hostname` when `authelia_database_type` is `mysql`
+          and `authelia_database_mysql_socket_enabled` is `false`.
+      when: >-
+        not authelia_database_mysql_socket_enabled and
+        authelia_database_mysql_hostname | string | length == 0
+
+- name: Run if Authelia + Postgres integration is enabled
+  when: authelia_database_type == 'postgres'
+  block:
+    - name: Fail if required Authelia + Postgres integration settings not defined
+      ansible.builtin.fail:
+        msg: >-
+          You need to define a required configuration setting (`{{ item }}`) when `authelia_database_type` is `postgres`
+      when: "lookup('vars', item, default='') | string | length == 0"
+      with_items:
+        - authelia_database_postgres_password
+
+    - name: Fail if Postgres socket host path for Authelia is missing when Unix socket is enabled
+      ansible.builtin.fail:
+        msg: >-
+          You need to define `authelia_database_postgres_socket_path_host` when `authelia_database_type` is `postgres`
+          and `authelia_database_postgres_socket_enabled` is `true`.
+      when: >-
+        authelia_database_postgres_socket_enabled and
+        authelia_database_postgres_socket_path_host | string | length == 0
+
+    - name: Fail if Postgres hostname for Authelia is missing when Unix socket is disabled
+      ansible.builtin.fail:
+        msg: >-
+          You need to define `authelia_database_postgres_hostname` when `authelia_database_type` is `postgres`
+          and `authelia_database_postgres_socket_enabled` is `false`.
+      when: >-
+        not authelia_database_postgres_socket_enabled and
+        authelia_database_postgres_hostname | string | length == 0
 
 - name: Run if Authelia + Redis integration is enabled
   when: authelia_redis_is_configured | bool
