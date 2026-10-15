@@ -325,9 +325,8 @@ authelia_redis_socket_path_host: ""
 
 # See: https://www.authelia.com/configuration/storage/introduction/
 
-# authelia_config_storage_encryption_key stores the encryption key that is used to encrypt sensitive information in the database.
+# Specify the encryption key that is used to encrypt sensitive information in the database.
 # It must be a string with a minimum length of 20.
-# Changing it subsequently will cause trouble.
 authelia_config_storage_encryption_key: ""
 
 # Specify a database driver to use

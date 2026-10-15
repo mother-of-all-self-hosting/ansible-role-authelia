@@ -80,6 +80,23 @@ authelia_config_session_domain: example.com
 
 Forward-auth services that you will protect need to be hosted on subdomains under this base domain (e.g. service1.example.com, service2.example.com). For OpenID Connect-protected services, this value does not matter.
 
+### Set random strings
+
+You also need to set random secure strings. To do so, add the following configuration to your `vars.yml` file. The values can be generated with `pwgen -s 64 1` or in another way.
+
+```yaml
+authelia_config_jwt_secret: YOUR_SECRET_JWT_KEY_HERE
+
+authelia_config_session_secret: YOUR_SESSION_SECRET_HERE
+
+authelia_config_storage_encryption_key: YOUR_SECRET_KEY_HERE
+```
+
+The value of `authelia_config_storage_encryption_key` needs to be at least 20 characters long.
+
+>[!WARNING]
+> Changing `authelia_config_storage_encryption_key` subsequently will cause trouble unless you use the CLI to migrate.
+
 ### Configuring database
 
 #### Specify database (optional)

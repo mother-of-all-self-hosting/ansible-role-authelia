@@ -148,9 +148,10 @@
     - authelia_validation_cookie.default_redirection_url | trim('/') == authelia_validation_cookie.authelia_url | trim('/')
   loop: "{{ range(authelia_configuration.session.cookies | length) | list }}"
 
-- name: Fail if encryption key is too short
+- name: Fail if Authelia encryption key is too short
   ansible.builtin.fail:
-    msg: "authelia_config_storage_encryption_key needs to be 20 chars or more"
+    msg: >-
+      authelia_config_storage_encryption_key needs to be at least 20 characters long.
   when: authelia_config_storage_encryption_key | length < 20
 
 - name: Fail if no notifier is enabled
