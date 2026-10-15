@@ -266,6 +266,8 @@ Take a look at:
 
 - [`defaults/main.yml`](../defaults/main.yml) for some variables that you can customize via your `vars.yml` file. You can override settings (even those that don't have dedicated playbook variables) using the `authelia_environment_variables_additional_variables` variable
 
+Refer to [this page](https://www.authelia.com/configuration/) on the official documentation for a complete list of Authelia's config options that you can put in `authelia_configuration_extension_yaml`.
+
 ## Installing
 
 After configuring the playbook, run the installation command of your playbook as below:
