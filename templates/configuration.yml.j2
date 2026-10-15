@@ -609,12 +609,14 @@ session:
   ##
   ## Important: Kubernetes (or HA) users must read https://www.authelia.com/t/statelessness
   ##
-{% if authelia_redis_hostname != '' %}
+{% if authelia_redis_is_configured %}
   redis:
+{% if authelia_redis_socket_enabled %}
+    host: {{ authelia_redis_socket_path_container }}{{ authelia_redis_socket_path }}
+{% else %}
     host: {{ authelia_redis_hostname | to_json }}
     port: {{ authelia_redis_port | to_json }}
-    ## Use a unix socket instead
-    # host: /var/run/redis/redis.sock
+{% endif %}
 
 {% if authelia_redis_username != '' %}
     ## Username used for redis authentication. This is optional and a new feature in redis 6.0.

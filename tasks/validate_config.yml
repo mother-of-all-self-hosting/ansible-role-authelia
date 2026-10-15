@@ -195,6 +195,39 @@
       authelia_config_authentication_backend_ldap_implementation must be 'activedirectory' or 'custom'
   when: "authelia_config_authentication_backend_ldap_implementation not in ['activedirectory', 'custom']"
 
+- name: Run if Authelia + Redis integration is enabled
+  when: authelia_redis_is_configured | bool
+  block:
+    - name: Fail if both Redis hostname and socket host path for Authelia are set
+      ansible.builtin.fail:
+        msg: >-
+          You may need to define either `authelia_redis_hostname` or `authelia_redis_socket_path_host` to enable Redis integration.
+      when: >-
+        authelia_redis_hostname | string | length != 0 and
+        authelia_redis_socket_path_host | string | length != 0
+
+    - name: Fail if Redis hostname for Authelia is set when Unix socket is enabled
+      ansible.builtin.fail:
+        msg: >-
+          You need to define `authelia_redis_socket_path_host` and remove `authelia_redis_hostname` to enable Redis integration,
+          when `authelia_redis_socket_enabled` is `true`.
+          Check the documentation for details.
+          You may remove the Redis service from `authelia_container_additional_networks_custom` if specified.
+      when: >-
+        authelia_redis_hostname | string | length != 0 and
+        authelia_redis_socket_enabled
+
+    - name: Fail if Redis socket host path for Authelia is set when Unix socket is not enabled
+      ansible.builtin.fail:
+        msg: >-
+          You need to define `authelia_redis_hostname` and remove `authelia_redis_socket_path_host` to enable Redis integration,
+          when `authelia_redis_socket_enabled` is `false`.
+          Check the documentation for details.
+          You may also need to specify the Redis service to `authelia_container_additional_networks_custom` if it does not exist on the same network.
+      when: >-
+        authelia_redis_socket_path_host | string | length != 0 and
+        not authelia_redis_socket_enabled
+
 - name: Run if Traefik is enabled
   when: authelia_container_labels_traefik_enabled | bool
   block:

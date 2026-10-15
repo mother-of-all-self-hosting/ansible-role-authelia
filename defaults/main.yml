@@ -295,6 +295,18 @@ authelia_redis_username: ""
 authelia_redis_password: ""
 authelia_redis_database: "0"
 
+authelia_redis_is_configured: "{{ authelia_redis_hostname != '' or authelia_redis_socket_path_host != '' }}"
+
+# Control if the connection to Redis is made via a Unix socket
+authelia_redis_socket_enabled: true
+
+# Specify the path to the Redis Unix socket path inside the Authelia container
+authelia_redis_socket_path_container: /run-valkey
+authelia_redis_socket_path: /valkey.sock
+
+# Specify the path to the Redis Unix socket path on the host (bind-mount source)
+authelia_redis_socket_path_host: ""
+
 ########################################################################
 #                                                                      #
 # /Session                                                             #
