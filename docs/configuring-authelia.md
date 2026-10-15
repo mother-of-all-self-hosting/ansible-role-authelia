@@ -162,6 +162,18 @@ Make sure to replace `YOUR_REDIS_SERVER_HOSTNAME_HERE` with your own value.
 
 If you are looking for an Ansible role for Redis, you can check out [ansible-role-redis](https://github.com/mother-of-all-self-hosting/ansible-role-redis) maintained by the [Mother-of-All-Self-Hosting (MASH)](https://github.com/mother-of-all-self-hosting) team. The role for Valkey ([ansible-role-valkey](https://github.com/mother-of-all-self-hosting/ansible-role-valkey)) is available as well.
 
+### Configuring access control (optional)
+
+You can configure [access control](https://www.authelia.com/configuration/security/access-control/), a list of rules defining the authorizations applied for one resource to users or group of users, by adding the following configuration to your `vars.yml` file (adapt to your needs):
+
+```yaml
+authelia_config_access_control_rules:
+ - domain: 'service1.example.com'
+   policy: one_factor
+```
+
+Refer to [`templates/configuration.yml.j2`](../templates/configuration.yml.j2) for details about how to set it up.
+
 ### Extending the configuration
 
 There are some additional things you may wish to configure about the service.
