@@ -37,6 +37,9 @@ ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} create \
       --label-file={{ authelia_base_path }}/labels \
       --mount type=bind,src={{ authelia_config_path }},dst=/config,ro \
       --mount type=bind,src={{ authelia_data_path }},dst=/data \
+      {% for volume in authelia_container_additional_volumes %}
+      --mount type={{ volume.type | default('bind' if '/' in volume.src else 'volume') }},src={{ volume.src }},dst={{ volume.dst }}{{ (',' + volume.options) if volume.options | default('') else '' }} \
+      {% endfor %}
       {% if authelia_redis_socket_enabled and authelia_redis_socket_path_host != '' %}
       --mount type=bind,src={{ authelia_redis_socket_path_host }},dst={{ authelia_redis_socket_path_container }} \
       {% endif %}
