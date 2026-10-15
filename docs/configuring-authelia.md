@@ -59,13 +59,26 @@ authelia_enabled: true
 
 ### Set the hostname
 
-To enable Authelia you need to set the hostname as well. To do so, add the following configuration to your `vars.yml` file. Make sure to replace `example.com` with your own value.
+To enable Authelia you need to set the hostname as well. To do so, add the following configuration to your `vars.yml` file. Make sure to replace `authelia.example.com` with your own value.
 
 ```yaml
-authelia_hostname: "example.com"
+authelia_hostname: "authelia.example.com"
 ```
 
 After adjusting the hostname, make sure to adjust your DNS records to point the domain to your server.
+
+### Set the base domain for session cookies
+
+You also need to specify the base domain that session cookies related to authentication will be set on as below:
+
+```yaml
+authelia_config_session_domain: example.com
+```
+
+>[!NOTE]
+> This needs to be a subdomain of `authelia_hostname`.
+
+Forward-auth services that you will protect need to be hosted on subdomains under this base domain (e.g. service1.example.com, service2.example.com). For OpenID Connect-protected services, this value does not matter.
 
 ### Configuring database
 
@@ -140,7 +153,7 @@ If you use the MASH playbook, the shortcut commands with the [`just` program](ht
 
 ## Usage
 
-After running the command for installation, the Authelia instance becomes available at the URL specified with `authelia_hostname` and `authelia_path_prefix`. With the configuration above, the service is hosted at `https://example.com`.
+After running the command for installation, the Authelia instance becomes available at the URL specified with `authelia_hostname`. With the configuration above, the service is hosted at `https://authelia.example.com`.
 
 ## Troubleshooting
 
