@@ -59,7 +59,7 @@ traefik.http.routers.{{ authelia_identifier }}.tls={{ authelia_container_labels_
 traefik.http.routers.{{ authelia_identifier }}.tls.certResolver={{ authelia_container_labels_traefik_tls_certResolver }}
 {% endif %}
 
-traefik.http.services.{{ authelia_identifier }}.loadbalancer.server.port=9091
+traefik.http.services.{{ authelia_identifier }}.loadbalancer.server.port={{ authelia_container_http_port }}
 
 traefik.http.middlewares.{{ authelia_identifier }}.forwardAuth.address=http://{{ authelia_identifier }}:9091/api/authz/forward-auth
 traefik.http.middlewares.{{ authelia_identifier }}.forwardAuth.trustForwardHeader=true

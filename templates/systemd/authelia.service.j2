@@ -30,6 +30,9 @@ ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} create \
       --user={{ authelia_uid }}:{{ authelia_gid }} \
       --cap-drop=ALL \
       --network={{ authelia_container_network }} \
+      {% if authelia_container_http_host_bind_port %}
+      -p {{ authelia_container_http_host_bind_port }}:{{ authelia_container_http_port }} \
+      {% endif %}
       --env-file={{ authelia_base_path }}/env \
       --label-file={{ authelia_base_path }}/labels \
       --mount type=bind,src={{ authelia_config_path }},dst=/config,ro \
