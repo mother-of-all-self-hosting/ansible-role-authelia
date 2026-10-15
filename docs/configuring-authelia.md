@@ -99,9 +99,9 @@ The value of `authelia_config_storage_encryption_key` needs to be at least 20 ch
 
 ### Configuring database
 
-#### Specify database (optional)
+#### Specify database
 
-You can specify a database used by Authelia. By default it is configured to use SQLite.
+It is necessary to select database used by DocuSeal from a MySQL compatible database, Postgres, and SQLite.
 
 To use Postgres, add the following configuration to your `vars.yml` file:
 
@@ -109,9 +109,7 @@ To use Postgres, add the following configuration to your `vars.yml` file:
 authelia_database_type: postgres
 ```
 
-Set `mysql` to use a MySQL compatible database.
-
-For other settings, check variables such as `authelia_database_mysql_*` and `authelia_database_postgres_*` on [`defaults/main.yml`](../defaults/main.yml).
+Set `mysql` to use a MySQL compatible database and `sqlite` to use SQLite, respectively. The SQLite database is stored in the directory specified with `authelia_data_path`.
 
 #### Configuring connection to the database server (optional)
 
