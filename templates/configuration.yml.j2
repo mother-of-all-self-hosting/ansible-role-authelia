@@ -807,11 +807,11 @@ storage:
   ##
 {% if authelia_config_storage_mysql_address != '' %}
   mysql:
-    address: {{ authelia_config_storage_mysql_address | to_json }}
-    database: {{ authelia_config_storage_mysql_database |to_json }}
-    username: {{ authelia_config_storage_mysql_username |to_json }}
+    address: {{ authelia_config_storage_address_mysql | to_json }}
+    database: {{ authelia_database_name | to_json }}
+    username: {{ authelia_database_mysql_username | to_json }}
     ## Password can also be set using a secret: https://www.authelia.com/c/secrets
-    password: {{ authelia_config_storage_mysql_password |to_json }}
+    password: {{ authelia_database_mysql_password | to_json }}
     # timeout: 5s
 
     ## MySQL TLS settings. Configuring this requires TLS.
@@ -913,12 +913,12 @@ storage:
   ##
 {% if authelia_config_storage_postgres_address != '' %}
   postgres:
-    address: {{ authelia_config_storage_postgres_address | to_json }}
-    database: {{ authelia_config_storage_postgres_database | to_json }}
+    address: {{ authelia_config_storage_address_postgres | to_json }}
+    database: {{ authelia_database_name | to_json }}
     schema: public
-    username: {{ authelia_config_storage_postgres_username | to_json }}
+    username: {{ authelia_database_postgres_username | to_json }}
     ## Password can also be set using a secret: https://www.authelia.com/c/secrets
-    password: {{ authelia_config_storage_postgres_password | to_json }}
+    password: {{ authelia_database_postgres_password | to_json }}
     # timeout: 5s
 
     ## PostgreSQL TLS settings. Configuring this requires TLS.
