@@ -616,14 +616,20 @@ session:
     ## Use a unix socket instead
     # host: /var/run/redis/redis.sock
 
+{% if authelia_redis_username != '' %}
     ## Username used for redis authentication. This is optional and a new feature in redis 6.0.
-    # username: authelia
+    username: {{ authelia_redis_username | to_json }}
+{% endif %}
 
+{% if authelia_redis_password != '' %}
     ## Password can also be set using a secret: https://www.authelia.com/c/secrets
-    # password: authelia
+    password: {{ authelia_redis_password | to_json }}
+{% endif %}
 
+{% if authelia_redis_database != '' %}
     ## This is the Redis DB Index https://redis.io/commands/select (sometimes referred to as database number, DB, etc).
-    # database_index: 0
+    database_index: {{ authelia_redis_database | to_json }}
+{% endif %}
 
     ## The maximum number of concurrent active connections to Redis.
     # maximum_active_connections: 8
