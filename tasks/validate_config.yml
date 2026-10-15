@@ -116,7 +116,7 @@
     - authelia_config_session_secret
     - authelia_config_storage_encryption_key
 
-- name: Fail if no session cookies are configured
+- name: Fail if no session cookies are configured for Authelia
   ansible.builtin.fail:
     msg: >-
       You need to configure at least one entry in `authelia_config_session_cookies`.
@@ -124,7 +124,7 @@
       `authelia_config_session_cookies_auto` and `authelia_config_session_cookies_custom`.
   when: authelia_configuration.get('session', {}).get('cookies', []) | length == 0
 
-- name: Fail if a session cookie is missing required settings
+- name: Fail if a session cookie for Authelia is missing required settings
   ansible.builtin.fail:
     msg: >-
       Session cookie #{{ item + 1 }} requires both `domain` and `authelia_url`.
@@ -135,7 +135,7 @@
   when: authelia_validation_cookie.get('domain', '') == '' or authelia_validation_cookie.get('authelia_url', '') == ''
   loop: "{{ range(authelia_configuration.session.cookies | length) | list }}"
 
-- name: Fail if a session cookie redirects to the Authelia portal
+- name: Fail if a session cookie for Authelia redirects to the Authelia portal
   ansible.builtin.fail:
     msg: >-
       Session cookie #{{ item + 1 }} has a `default_redirection_url` equal to its `authelia_url`.
@@ -154,36 +154,36 @@
       authelia_config_storage_encryption_key needs to be at least 20 characters long.
   when: authelia_config_storage_encryption_key | length < 20
 
-- name: Fail if no notifier is enabled
+- name: Fail if a notifier for Authelia is not enabled
   ansible.builtin.fail:
     msg: >-
       Authelia requires either the SMTP notifier or filesystem-based notifier configured.
       You need to set either `authelia_config_notifier_filesystem_filename` or
-      a bunch of `authelia_config_notifier_smtp_*` variables.
+      `authelia_config_notifier_smtp_*` variables.
   when: "authelia_config_notifier_filesystem_filename == '' and authelia_config_notifier_smtp_address == ''"
 
 # We only check that at least one authentication backend is enabled.
 # Enabling multiple will cause a problem at runtime, but our validation logic does not cover this edge case.
-- name: Fail if not authentication_backend is enabled
+- name: Fail if an authentication backend for Authelia is not enabled
   ansible.builtin.fail:
     msg: >-
       Authelia requires either the LDAP authentication backend or the file-based authentication backend to be configured.
       You need to set either `authelia_config_authentication_backend_file_path` or
-      a bunch of `authelia_config_authentication_backend_ldap_*` variables.
+      `authelia_config_authentication_backend_ldap_*` variables.
   when: "authelia_config_authentication_backend_file_path == '' and authelia_config_authentication_backend_ldap_url == ''"
 
 # We only check that at least one storage provider is enabled.
 # Enabling multiple will cause a problem at runtime, but our validation logic does not cover this edge case.
-- name: Fail if no storage provider is enabled
+- name: Fail if a storage provider for Authelia is not enabled
   ansible.builtin.fail:
     msg: >-
       Authelia requires that one storage provider by enabled.
-      You need to set either `authelia_config_storage_local_path` or
-      a bunch of `authelia_database_mysql_*` variables or
-      a bunch of `authelia_database_postgres_*` variables.
+      You need to set either `authelia_config_storage_local_path`,
+      `authelia_database_mysql_*`, or
+      `authelia_database_postgres_*` variables.
   when: "authelia_config_storage_local_path == '' and authelia_database_mysql_hostname == '' and authelia_database_postgres_hostname == ''"
 
-- name: Fail if OpenID Connect enabled, but required authelia_config_identity_providers_oidc_issuer_private_key is not set
+- name: Fail if OpenID Connect for Authelia is enabled but its required setting is not set
   ansible.builtin.fail:
     msg: |
       Your configuration defines at least one OpenID Connect client in `authelia_config_identity_providers_oidc_clients`, so OpenID Connect support is enabled.
