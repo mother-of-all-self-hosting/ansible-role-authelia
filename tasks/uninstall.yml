@@ -1,5 +1,5 @@
 # SPDX-FileCopyrightText: 2023 Slavi Pantaleev
-# SPDX-FileCopyrightText: 2025 Suguru Hirahara
+# SPDX-FileCopyrightText: 2025, 2026 Suguru Hirahara
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -24,6 +24,35 @@
         path: "{{ devture_systemd_docker_base_systemd_path }}/{{ authelia_identifier }}.service"
         state: absent
 
+    - name: Ensure Authelia support files do not exist
+      ansible.builtin.file:
+        path: "{{ authelia_base_path }}/{{ item }}"
+        state: absent
+      with_items:
+        - env
+        - labels
+
+    - name: Ensure Authelia local config path does not exist if empty
+      ansible.builtin.command:
+        cmd: "rmdir {{ authelia_config_path }}"
+      register: authelia_config_path_deletion_result
+      changed_when: authelia_config_path_deletion_result.rc == 0
+      failed_when: false
+
+    - name: Ensure Authelia local data path does not exist if empty
+      ansible.builtin.command:
+        cmd: "rmdir {{ authelia_data_path }}"
+      register: authelia_data_path_deletion_result
+      changed_when: authelia_data_path_deletion_result.rc == 0
+      failed_when: false
+
+    - name: Ensure Authelia base path does not exist if empty
+      ansible.builtin.command:
+        cmd: "rmdir {{ authelia_base_path }}"
+      register: authelia_base_path_deletion_result
+      changed_when: authelia_base_path_deletion_result.rc == 0
+      failed_when: false
+
     - name: Ensure Authelia container network does not exist
       when: authelia_container_network_deletion_enabled
       block:
@@ -43,7 +72,38 @@
           register: authelia_network_deletion_result
           changed_when: authelia_container_network in authelia_network_deletion_result.stdout
 
-    - name: Ensure Authelia path does not exist
-      ansible.builtin.file:
-        path: "{{ authelia_base_path }}"
-        state: absent
+- name: Check existence of Authelia local config path
+  ansible.builtin.stat:
+    path: "{{ authelia_config_path }}"
+  register: authelia_config_path_stat
+
+# We just want to notify the user. Deleting config is too destructive.
+- name: Inject the message about the remaining Authelia local config path
+  when: authelia_config_path_stat.stat.exists | bool
+  ansible.builtin.set_fact:
+    devture_playbook_runtime_messages_list: |
+      {{
+        devture_playbook_runtime_messages_list | default([])
+        +
+        [
+          "Note: As the local Authelia instance has been removed, some old config remains in `" + authelia_config_path + "`. Feel free to delete it."
+        ]
+      }}
+
+- name: Check existence of Authelia local data path
+  ansible.builtin.stat:
+    path: "{{ authelia_data_path }}"
+  register: authelia_data_path_stat
+
+# We just want to notify the user. Deleting data is too destructive.
+- name: Inject the message about the remaining Authelia local data path
+  when: authelia_data_path_stat.stat.exists | bool
+  ansible.builtin.set_fact:
+    devture_playbook_runtime_messages_list: |
+      {{
+        devture_playbook_runtime_messages_list | default([])
+        +
+        [
+          "Note: As the local Authelia instance has been removed, some old data remains in `" + authelia_data_path + "`. Feel free to delete it."
+        ]
+      }}
