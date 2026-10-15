@@ -1,5 +1,7 @@
 {#
+SPDX-FileCopyrightText: 2023 Julian-Samuel Gebühr
 SPDX-FileCopyrightText: 2023 Slavi Pantaleev
+SPDX-FileCopyrightText: 2025, 2026 Suguru Hirahara
 
 SPDX-License-Identifier: AGPL-3.0-or-later
 #}
@@ -12,6 +14,11 @@ traefik.docker.network={{ authelia_container_labels_traefik_docker_network }}
 {% endif %}
 
 {% set middlewares = [] %}
+
+{% if authelia_container_labels_traefik_middleware_basic_auth_enabled %}
+{% set middlewares = middlewares + [authelia_identifier + '-basic-auth'] %}
+traefik.http.middlewares.{{ authelia_identifier }}-basic-auth.basicauth.users={{ authelia_container_labels_traefik_middleware_basic_auth_users }}
+{% endif %}
 
 {% if authelia_container_labels_traefik_path_prefix != '/' %}
 traefik.http.middlewares.{{ authelia_identifier }}-slashless-redirect.redirectregex.regex=^({{ authelia_container_labels_traefik_path_prefix | quote }})$
