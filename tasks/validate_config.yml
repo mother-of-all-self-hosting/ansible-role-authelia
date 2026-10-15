@@ -111,6 +111,7 @@
     - authelia_hostname
     - authelia_path_prefix
     - authelia_container_network
+    - authelia_database_type
     - authelia_config_jwt_secret
     - authelia_config_session_secret
     - authelia_config_storage_encryption_key
@@ -205,6 +206,12 @@
     msg: >-
       authelia_config_authentication_backend_ldap_implementation must be 'activedirectory' or 'custom'
   when: "authelia_config_authentication_backend_ldap_implementation not in ['activedirectory', 'custom']"
+
+- name: Fail if Authelia database type invalid
+  ansible.builtin.fail:
+    msg: >-
+      authelia_database_type must be 'mysql', 'postgres' or 'sqlite'
+  when: "authelia_database_type not in ['mysql', 'postgres', 'sqlite']"
 
 - name: Run if Authelia + Redis integration is enabled
   when: authelia_redis_is_configured | bool

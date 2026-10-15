@@ -796,7 +796,7 @@ storage:
   ##
   ## Important: Kubernetes (or HA) users must read https://www.authelia.com/t/statelessness
   ##
-{% if authelia_config_storage_local_path != '' %}
+{% if authelia_database_type == 'sqlite' %}
   local:
     ## Path to the SQLite3 Database.
     path: {{ authelia_config_storage_local_path | to_json }}
@@ -805,7 +805,7 @@ storage:
   ##
   ## MySQL / MariaDB (Storage Provider)
   ##
-{% if authelia_config_storage_mysql_address != '' %}
+{% if authelia_database_type == 'mysql' %}
   mysql:
     address: {{ authelia_config_storage_address_mysql | to_json }}
     database: {{ authelia_database_name | to_json }}
@@ -911,7 +911,7 @@ storage:
   ##
   ## PostgreSQL (Storage Provider)
   ##
-{% if authelia_config_storage_postgres_address != '' %}
+{% if authelia_database_type == 'postgres' %}
   postgres:
     address: {{ authelia_config_storage_address_postgres | to_json }}
     database: {{ authelia_database_name | to_json }}
