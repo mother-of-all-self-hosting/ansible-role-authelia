@@ -21,51 +21,51 @@ SPDX-FileCopyrightText: 2024-2026 Suguru Hirahara
 SPDX-License-Identifier: AGPL-3.0-or-later
 -->
 
-# Setting up Forgejo
+# Setting up Authelia
 
-This is an [Ansible](https://www.ansible.com/) role which installs [Forgejo](https://forgejo.org) to run as a [Docker](https://www.docker.com/) container wrapped in a systemd service.
+This is an [Ansible](https://www.ansible.com/) role which installs [Authelia](https://authelia.org) to run as a [Docker](https://www.docker.com/) container wrapped in a systemd service.
 
-Forgejo is a self-hosted lightweight software forge (Git hosting service, etc.), an alternative to [Gitea](https://gitea.io/).
+Authelia is a self-hosted lightweight software forge (Git hosting service, etc.), an alternative to [Gitea](https://gitea.io/).
 
-See the project's [documentation](https://forgejo.org/docs/latest/) to learn what Forgejo does and why it might be useful to you.
+See the project's [documentation](https://authelia.org/docs/latest/) to learn what Authelia does and why it might be useful to you.
 
 >[!NOTE]
-> As the role is configured to [use the rootless image](https://forgejo.org/docs/latest/admin/installation/docker/#using-rootless-image), the path for the data folder (mounted via `forgejo_data_path`) is different from the one used by the image which is not rootless.
+> As the role is configured to [use the rootless image](https://authelia.org/docs/latest/admin/installation/docker/#using-rootless-image), the path for the data folder (mounted via `authelia_data_path`) is different from the one used by the image which is not rootless.
 
 ## Prerequisites
 
-To run a Forgejo instance it is necessary to prepare a database. You can use a [MySQL](https://www.mysql.com/) compatible database server, [Postgres](https://www.postgresql.org/), or [SQLite](https://www.sqlite.org/). By default it is configured to use SQLite.
+To run a Authelia instance it is necessary to prepare a database. You can use a [MySQL](https://www.mysql.com/) compatible database server, [Postgres](https://www.postgresql.org/), or [SQLite](https://www.sqlite.org/). By default it is configured to use SQLite.
 
 If you are looking for Ansible roles for a MySQL compatible server or Postgres, you can check out [ansible-role-mariadb](https://github.com/mother-of-all-self-hosting/ansible-role-mariadb) and [ansible-role-postgres](https://github.com/mother-of-all-self-hosting/ansible-role-postgres), both of which are maintained by the [Mother-of-All-Self-Hosting (MASH)](https://github.com/mother-of-all-self-hosting) team.
 
 ## Adjusting the playbook configuration
 
-To enable Forgejo with this role, add the following configuration to your `vars.yml` file.
+To enable Authelia with this role, add the following configuration to your `vars.yml` file.
 
 **Note**: the path should be something like `inventory/host_vars/mash.example.com/vars.yml` if you use the [MASH Ansible playbook](https://github.com/mother-of-all-self-hosting/mash-playbook).
 
 ```yaml
 ########################################################################
 #                                                                      #
-# forgejo                                                              #
+# authelia                                                             #
 #                                                                      #
 ########################################################################
 
-forgejo_enabled: true
+authelia_enabled: true
 
 ########################################################################
 #                                                                      #
-# /forgejo                                                             #
+# /authelia                                                            #
 #                                                                      #
 ########################################################################
 ```
 
 ### Set the hostname
 
-To enable Forgejo you need to set the hostname as well. To do so, add the following configuration to your `vars.yml` file. Make sure to replace `example.com` with your own value.
+To enable Authelia you need to set the hostname as well. To do so, add the following configuration to your `vars.yml` file. Make sure to replace `example.com` with your own value.
 
 ```yaml
-forgejo_hostname: "example.com"
+authelia_hostname: "example.com"
 ```
 
 After adjusting the hostname, make sure to adjust your DNS records to point the domain to your server.
@@ -74,17 +74,17 @@ After adjusting the hostname, make sure to adjust your DNS records to point the 
 
 #### Specify database (optional)
 
-You can specify a database used by Forgejo. By default it is configured to use SQLite.
+You can specify a database used by Authelia. By default it is configured to use SQLite.
 
 To use Postgres, add the following configuration to your `vars.yml` file:
 
 ```yaml
-forgejo_database_type: postgres
+authelia_database_type: postgres
 ```
 
 Set `mysql` to use a MySQL compatible database.
 
-For other settings, check variables such as `forgejo_database_mysql_*` and `forgejo_database_postgres_*` on [`defaults/main.yml`](../defaults/main.yml).
+For other settings, check variables such as `authelia_database_mysql_*` and `authelia_database_postgres_*` on [`defaults/main.yml`](../defaults/main.yml).
 
 #### Configuring connection to the database server (optional)
 
@@ -92,10 +92,10 @@ By default the role is configured to establish the connection to the database se
 
 ```yaml
 # Specify the path to the MySQL compatible server's Unix socket path on the host (bind-mount source)
-forgejo_database_mysql_socket_path_host: ""
+authelia_database_mysql_socket_path_host: ""
 
 # Specify the path to the Postgres Unix socket path on the host (bind-mount source)
-forgejo_database_postgres_socket_path_host: ""
+authelia_database_postgres_socket_path_host: ""
 ```
 
 Setting it enables to connect to the database server via Unix socket mounted in the container.
@@ -104,42 +104,42 @@ If TCP connection is preferred, connection via the Unix socket can be disabled b
 
 ```yaml
 # Disable the connection to the MySQL compatible server via a Unix socket
-forgejo_database_mysql_socket_enabled: false
+authelia_database_mysql_socket_enabled: false
 
 # Disable the connection to the Postgres server via a Unix socket
-forgejo_database_postgres_socket_enabled: false
+authelia_database_postgres_socket_enabled: false
 ```
 
-### Configure SSH port for Forgejo (optional)
+### Configure SSH port for Authelia (optional)
 
-Forgejo uses port 22 for its SSH feature by default.
+Authelia uses port 22 for its SSH feature by default.
 
-We recommend you to move your regular SSH server to another port, and stick to this default for your Forgejo instance.
+We recommend you to move your regular SSH server to another port, and stick to this default for your Authelia instance.
 
 If you wish to have the instance listen to another port, add the following configuration to your `vars.yml` file and adjust the port as you see fit.
 
 ```yaml
-forgejo_container_ssh_port: 222
+authelia_container_ssh_port: 222
 ```
 
 ### Configuring cache (optional)
 
-Forgejo uses caching to avoid repeating expensive operations. By default the internal memory (`memory`) is enabled for it, but you can use a specific cache adapter by adding the following configuration to your `vars.yml` file (adapt to your needs):
+Authelia uses caching to avoid repeating expensive operations. By default the internal memory (`memory`) is enabled for it, but you can use a specific cache adapter by adding the following configuration to your `vars.yml` file (adapt to your needs):
 
 ```yaml
 # Valid values: memcache, memory, redis, redis-cluster, twoqueue
-forgejo_config_cache_adapter: ""
+authelia_config_cache_adapter: ""
 ```
 
 #### Configuration for `redis` and `redis-cluster`
 
-If `redis` or `redis-cluster` is set to `forgejo_config_cache_adapter`, you can set the connection string by adding the following configuration to your `vars.yml` file:
+If `redis` or `redis-cluster` is set to `authelia_config_cache_adapter`, you can set the connection string by adding the following configuration to your `vars.yml` file:
 
 ```yaml
-forgejo_redis_hostname: YOUR_REDIS_SERVER_HOSTNAME_HERE
-forgejo_redis_port: 6379
-forgejo_redis_password: YOUR_REDIS_SERVER_PASSWORD_HERE
-forgejo_redis_database: 0
+authelia_redis_hostname: YOUR_REDIS_SERVER_HOSTNAME_HERE
+authelia_redis_port: 6379
+authelia_redis_password: YOUR_REDIS_SERVER_PASSWORD_HERE
+authelia_redis_database: 0
 ```
 
 Make sure to replace `YOUR_REDIS_SERVER_HOSTNAME_HERE` and `YOUR_REDIS_SERVER_PASSWORD_HERE` with your own values.
@@ -148,96 +148,96 @@ If you are looking for an Ansible role for Redis, you can check out [ansible-rol
 
 #### Configuration for `memcache` and `twoqueue`
 
-If `memcache` or `twoqueue` is set to `forgejo_config_cache_adapter`, you can set the connection string by adding the following configuration to your `vars.yml` file:
+If `memcache` or `twoqueue` is set to `authelia_config_cache_adapter`, you can set the connection string by adding the following configuration to your `vars.yml` file:
 
 ```yaml
-forgejo_config_cache_host: CONNECTION_STRING_HERE
+authelia_config_cache_host: CONNECTION_STRING_HERE
 ```
 
 Note that the role is configured to establish connection with the Memcached instance via the Unix socket by default.
 
-Refer to [this section](https://forgejo.org/docs/latest/admin/config-cheat-sheet/#cache-cache) on the official documentation for details.
+Refer to [this section](https://authelia.org/docs/latest/admin/config-cheat-sheet/#cache-cache) on the official documentation for details.
 
 If you are looking for an Ansible role for [Memcached](https://memcached.org), you can check out [ansible-role-memcache](https://radicle.network/nodes/iris.radicle.network/rad%3Az2arPcue4GZ6G6FY3gZexsJXqHyDs) maintained by the [Mother-of-All-Self-Hosting (MASH)](https://github.com/mother-of-all-self-hosting) team.
 
 ### Configuring issue indexer (optional)
 
-By default Forgejo is configured to use `bleve` as an issue indexer, but you can use a specific indexer by adding the following configuration to your `vars.yml` file (adapt to your needs):
+By default Authelia is configured to use `bleve` as an issue indexer, but you can use a specific indexer by adding the following configuration to your `vars.yml` file (adapt to your needs):
 
 ```yaml
 # Valid values: bleve, db, elasticsearch, meilisearch
-forgejo_environment_variables_indexer_issue_indexer_type: ISSUE_INDEXER_VALUE_HERE
+authelia_environment_variables_indexer_issue_indexer_type: ISSUE_INDEXER_VALUE_HERE
 
 # Specify issue indexer connection string
-forgejo_environment_variables_indexer_issue_indexer_conn_str: YOUR_ISSUE_INDEXER_CONNECTION_STRING_HERE
+authelia_environment_variables_indexer_issue_indexer_conn_str: YOUR_ISSUE_INDEXER_CONNECTION_STRING_HERE
 ```
 
-Refer to [this section](https://forgejo.org/docs/latest/admin/config-cheat-sheet/#indexer-indexer) on the official documentation for details.
+Refer to [this section](https://authelia.org/docs/latest/admin/config-cheat-sheet/#indexer-indexer) on the official documentation for details.
 
 >[!NOTE]
-> The default Admin API Key is sufficient for using Meilisearch on a Forgejo instance. It is [not recommended](https://www.meilisearch.com/docs/learn/security/basic_security) to use the master key for operations anything but managing other API keys.
+> The default Admin API Key is sufficient for using Meilisearch on a Authelia instance. It is [not recommended](https://www.meilisearch.com/docs/learn/security/basic_security) to use the master key for operations anything but managing other API keys.
 
 If you are looking for an Ansible role for Meilisearch, you can check out [ansible-role-meilisearch](https://github.com/mother-of-all-self-hosting/ansible-role-meilisearch) maintained by the [Mother-of-All-Self-Hosting (MASH)](https://github.com/mother-of-all-self-hosting) team.
 
 ### Configure OAuth2/OpenID Connect login (optional)
 
-You can configure a Forgejo OAuth2 authentication source backed by an OpenID Connect provider.
+You can configure a Authelia OAuth2 authentication source backed by an OpenID Connect provider.
 
 Add variables like these to your `vars.yml` file:
 
 ```yaml
-forgejo_oidc_client_enabled: true
+authelia_oidc_client_enabled: true
 
-forgejo_oidc_provider_name: "authentik"
-forgejo_oidc_client_id: "FORGEJO_OIDC_CLIENT_ID_HERE"
-forgejo_oidc_client_secret: "FORGEJO_OIDC_CLIENT_SECRET_HERE"
-forgejo_oidc_auto_discover_url: "https://sso.example.com/application/o/forgejo/.well-known/openid-configuration"
+authelia_oidc_provider_name: "authentik"
+authelia_oidc_client_id: "FORGEJO_OIDC_CLIENT_ID_HERE"
+authelia_oidc_client_secret: "FORGEJO_OIDC_CLIENT_SECRET_HERE"
+authelia_oidc_auto_discover_url: "https://sso.example.com/application/o/authelia/.well-known/openid-configuration"
 
 # Optional
-# forgejo_oidc_scopes: "openid email profile"
-# forgejo_oidc_required_claim_name: ""
-# forgejo_oidc_required_claim_value: ""
-# forgejo_oidc_group_claim_name: "groups"
-# forgejo_oidc_admin_group: "admin"
+# authelia_oidc_scopes: "openid email profile"
+# authelia_oidc_required_claim_name: ""
+# authelia_oidc_required_claim_value: ""
+# authelia_oidc_group_claim_name: "groups"
+# authelia_oidc_admin_group: "admin"
 ```
 
-To apply only this part of the configuration, run the playbook with the `configure-oauth-forgejo` tag.
+To apply only this part of the configuration, run the playbook with the `configure-oauth-authelia` tag.
 
 ```sh
-ansible-playbook -i inventory/hosts setup.yml --tags=configure-oauth-forgejo
+ansible-playbook -i inventory/hosts setup.yml --tags=configure-oauth-authelia
 ```
 
-If you disable `forgejo_oidc_client_enabled`, the role removes the configured provider with the name defined in `forgejo_oidc_provider_name`.
+If you disable `authelia_oidc_client_enabled`, the role removes the configured provider with the name defined in `authelia_oidc_provider_name`.
 
 The following OIDC variables are part of this role's public API surface for
 external consumers (other roles/playbooks/templates) and are not currently
 consumed by this role's task logic:
 
-- `forgejo_oidc_client_name`
-- `forgejo_oidc_redirect_uris`
-- `forgejo_oidc_authorize_url`
-- `forgejo_oidc_token_url`
-- `forgejo_oidc_userinfo_url`
+- `authelia_oidc_client_name`
+- `authelia_oidc_redirect_uris`
+- `authelia_oidc_authorize_url`
+- `authelia_oidc_token_url`
+- `authelia_oidc_userinfo_url`
 
 ### Configuring trusted reverse proxies (optional)
 
-Forgejo determines the actual client IP address from `X-Forwarded-For` / `X-Real-IP` headers only if the request comes from a trusted reverse proxy (refer to [`REVERSE_PROXY_TRUSTED_PROXIES`](https://forgejo.org/docs/latest/admin/config-cheat-sheet/#security-security)).
+Authelia determines the actual client IP address from `X-Forwarded-For` / `X-Real-IP` headers only if the request comes from a trusted reverse proxy (refer to [`REVERSE_PROXY_TRUSTED_PROXIES`](https://authelia.org/docs/latest/admin/config-cheat-sheet/#security-security)).
 
-Since this role typically runs Forgejo behind a reverse proxy (e.g. Traefik) on a container network, it trusts the loopback and all private (RFC1918) address ranges by default.
+Since this role typically runs Authelia behind a reverse proxy (e.g. Traefik) on a container network, it trusts the loopback and all private (RFC1918) address ranges by default.
 
 To adjust the list of trusted proxies, add the following configuration to your `vars.yml` file (adapt to your needs):
 
 ```yaml
-forgejo_config_security_reverse_proxy_trusted_proxies:
+authelia_config_security_reverse_proxy_trusted_proxies:
   - 127.0.0.0/8
   - ::1/128
 ```
 
 ### Integrating with Prometheus (optional)
 
-Forgejo can natively expose metrics to Prometheus.
+Authelia can natively expose metrics to Prometheus.
 
-If you are looking for an integration, you can check out the MASH playbook. Refer to [this section of the documentation on the playbook](https://github.com/mother-of-all-self-hosting/mash-playbook/blob/main/docs/services/forgejo.md#integrating-with-prometheus-optional) for more information.
+If you are looking for an integration, you can check out the MASH playbook. Refer to [this section of the documentation on the playbook](https://github.com/mother-of-all-self-hosting/mash-playbook/blob/main/docs/services/authelia.md#integrating-with-prometheus-optional) for more information.
 
 ### Extending the configuration
 
@@ -245,7 +245,7 @@ There are some additional things you may wish to configure about the service.
 
 Take a look at:
 
-- [`defaults/main.yml`](../defaults/main.yml) for some variables that you can customize via your `vars.yml` file. You can override settings (even those that don't have dedicated playbook variables) using the `forgejo_environment_variables_additional_variables` variable
+- [`defaults/main.yml`](../defaults/main.yml) for some variables that you can customize via your `vars.yml` file. You can override settings (even those that don't have dedicated playbook variables) using the `authelia_environment_variables_additional_variables` variable
 
 ## Installing
 
@@ -259,51 +259,51 @@ If you use the MASH playbook, the shortcut commands with the [`just` program](ht
 
 ## Usage
 
-After running the command for installation, the Forgejo instance becomes available at the URL specified with `forgejo_hostname` and `forgejo_path_prefix`. With the configuration above, the service is hosted at `https://example.com`.
+After running the command for installation, the Authelia instance becomes available at the URL specified with `authelia_hostname` and `authelia_path_prefix`. With the configuration above, the service is hosted at `https://example.com`.
 
 To get started, open the URL with a web browser, and follow the set up wizard.
 
 ## Migrating from Gitea
 
 >[!NOTE]
-> The instruction is intended to be applied for Forgejo and Gitea instances managed by [the MASH Ansible playbook](https://github.com/mother-of-all-self-hosting/mash-playbook). Replace the service names and paths with the ones specified on your playbook as necessary.
+> The instruction is intended to be applied for Authelia and Gitea instances managed by [the MASH Ansible playbook](https://github.com/mother-of-all-self-hosting/mash-playbook). Replace the service names and paths with the ones specified on your playbook as necessary.
 
-Forgejo is a fork of Gitea. Migrating Gitea (versions up to and including v1.22.0) to Forgejo was relatively easy, but [Gitea versions after v1.22.0 do not allow such transparent upgrades anymore](https://forgejo.org/2024-12-gitea-compatibility/).
+Authelia is a fork of Gitea. Migrating Gitea (versions up to and including v1.22.0) to Authelia was relatively easy, but [Gitea versions after v1.22.0 do not allow such transparent upgrades anymore](https://authelia.org/2024-12-gitea-compatibility/).
 
-Nevertheless, upgrades may be possible with some manual work. Below is a rough guide to help you migrate from Gitea (tested with version v1.23.1) to Forgejo (v10.0.0).
+Nevertheless, upgrades may be possible with some manual work. Below is a rough guide to help you migrate from Gitea (tested with version v1.23.1) to Authelia (v10.0.0).
 
 > [!WARNING]
-> 2FA does not seem to be working in Forgejo, but [some work](https://codeberg.org/forgejo/forgejo/pulls/7251) has landed in [v10.0.2](https://codeberg.org/forgejo/forgejo/src/commit/c5c0948ae5c96a694cc36945c3d9d5dae439bdd0/release-notes-published/10.0.2.md) which possibly improves things. If this is something you require to get working, do know that it's still an unsolved problem. Details for resetting/disabling 2FA are below.
+> 2FA does not seem to be working in Authelia, but [some work](https://codeberg.org/authelia/authelia/pulls/7251) has landed in [v10.0.2](https://codeberg.org/authelia/authelia/src/commit/c5c0948ae5c96a694cc36945c3d9d5dae439bdd0/release-notes-published/10.0.2.md) which possibly improves things. If this is something you require to get working, do know that it's still an unsolved problem. Details for resetting/disabling 2FA are below.
 
-1. Adjust `vars.yml` to enable the Forgejo service (prepare DNS records if using a dedicated hostname instead of your old Gitea hostname). We do not disable Gitea just yet.
+1. Adjust `vars.yml` to enable the Authelia service (prepare DNS records if using a dedicated hostname instead of your old Gitea hostname). We do not disable Gitea just yet.
 
 2. Stop Gitea by running this on the server: `systemctl disable --now mash-gitea.service`
 
-3. Dump the Gitea database and adapt for Forgejo
+3. Dump the Gitea database and adapt for Authelia
 
     Run these commands on the server:
 
     ```sh
-    mkdir /mash/gitea-to-forgejo-migration
-    chown $(id -u mash):$(id -g mash) /mash/gitea-to-forgejo-migration
+    mkdir /mash/gitea-to-authelia-migration
+    chown $(id -u mash):$(id -g mash) /mash/gitea-to-authelia-migration
 
     docker run \
     --rm \
     --user=$(id -u mash):$(id -g mash) \
     --cap-drop=ALL \
     --env-file=/mash/postgres/env-postgres-psql \
-    --mount type=bind,src=/mash/gitea-to-forgejo-migration,dst=/out \
+    --mount type=bind,src=/mash/gitea-to-authelia-migration,dst=/out \
     --network=mash-postgres \
     --entrypoint=/bin/sh \
     docker.io/postgres:17.2-alpine \
-    -c 'set -o pipefail && pg_dump -h mash-postgres -d gitea > /out/forgejo.sql'
+    -c 'set -o pipefail && pg_dump -h mash-postgres -d gitea > /out/authelia.sql'
 
-    sed --in-place 's/OWNER TO gitea/OWNER TO forgejo/g' /mash/gitea-to-forgejo-migration/forgejo.sql
+    sed --in-place 's/OWNER TO gitea/OWNER TO authelia/g' /mash/gitea-to-authelia-migration/authelia.sql
     ```
 
-4. Prepare the `forgejo` Postgres database by running the playbook: `ansible-playbook -i inventory/hosts setup.yml --tags=install-postgres`
+4. Prepare the `authelia` Postgres database by running the playbook: `ansible-playbook -i inventory/hosts setup.yml --tags=install-postgres`
 
-5. Import the database dump into the `forgejo` Postgres database
+5. Import the database dump into the `authelia` Postgres database
 
     Run this command on the server:
 
@@ -313,30 +313,30 @@ Nevertheless, upgrades may be possible with some manual work. Below is a rough g
     --user=$(id -u mash):$(id -g mash) \
     --cap-drop=ALL \
     --env-file=/mash/postgres/env-postgres-psql \
-    --mount type=bind,src=/mash/gitea-to-forgejo-migration,dst=/out \
+    --mount type=bind,src=/mash/gitea-to-authelia-migration,dst=/out \
     --network=mash-postgres \
     --entrypoint=/bin/sh \
     docker.io/postgres:17.2-alpine \
-    -c 'set -o pipefail && psql -h mash-postgres -d forgejo < /out/forgejo.sql'
+    -c 'set -o pipefail && psql -h mash-postgres -d authelia < /out/authelia.sql'
     ```
 
-6. Install Forgejo using the playbook, but do not start it yet: `ansible-playbook -i inventory/hosts setup.yml --tags=install-forgejo`
+6. Install Authelia using the playbook, but do not start it yet: `ansible-playbook -i inventory/hosts setup.yml --tags=install-authelia`
 
 7. Sync some files from Gitea by running these commands on the server
 
     ```sh
-    rsync -avr /mash/gitea/data/. /mash/forgejo/data/.
+    rsync -avr /mash/gitea/data/. /mash/authelia/data/.
 
     # These files seem to live in a different place now, so we move them around.
-    mv /mash/forgejo/data/data/gitea/repo-avatars /mash/forgejo/data/repo-avatars
-    rmdir /mash/forgejo/data/data/gitea
+    mv /mash/authelia/data/data/gitea/repo-avatars /mash/authelia/data/repo-avatars
+    rmdir /mash/authelia/data/data/gitea
     ```
 
-8. **For Gitea versions older than v1.22, skip this step**. For newer versions, revert the `forgejo` database to a schema migration version that Forgejo supports
+8. **For Gitea versions older than v1.22, skip this step**. For newer versions, revert the `authelia` database to a schema migration version that Authelia supports
 
-    In this guide, we're using Gitea v1.23.1, the database schema version for which (`312`) is newer than what Forgejo supports (`305`). We need to [revert all migrations that are newer than `305`](https://github.com/go-gitea/gitea/tree/v1.23.1/models/migrations/v1_23).
+    In this guide, we're using Gitea v1.23.1, the database schema version for which (`312`) is newer than what Authelia supports (`305`). We need to [revert all migrations that are newer than `305`](https://github.com/go-gitea/gitea/tree/v1.23.1/models/migrations/v1_23).
 
-    This may not always be possible or easy. For Gitea v1.23.1, the reverts can be done by running `/mash/postgres/bin/cli`, switching to the `forgejo` database (`\c forgejo`), and running the following queries:
+    This may not always be possible or easy. For Gitea v1.23.1, the reverts can be done by running `/mash/postgres/bin/cli`, switching to the `authelia` database (`\c authelia`), and running the following queries:
 
     ```sql
     -- Revert 311
@@ -371,11 +371,11 @@ Nevertheless, upgrades may be possible with some manual work. Below is a rough g
     UPDATE version SET version = 305;
     ```
 
-9. Start Forgejo by running this on the server: `systemctl start mash-forgejo.service`
+9. Start Authelia by running this on the server: `systemctl start mash-authelia.service`
 
-10. Complete the Forgejo installation on the web
+10. Complete the Authelia installation on the web
 
-    Forgejo may show an Installation page at the base URL with various configuration options, most of which prefilled.
+    Authelia may show an Installation page at the base URL with various configuration options, most of which prefilled.
 
     Our experience was that:
 
@@ -383,13 +383,13 @@ Nevertheless, upgrades may be possible with some manual work. Below is a rough g
 
     - the "Disable self-registration" checkbox (which is rightfully checked) had to be disabled to prevent an error saying: "You cannot disable user self-registration without creating an administrator account."
 
-    After completing the installation, you should be able to access your new Forgejo instance.
+    After completing the installation, you should be able to access your new Authelia instance.
 
 11. Reset 2FA authentication settings for all users
 
-    Forgejo seems to suffer from some issues when handling 2FA login and will return a "500 internal server error" while checking your 2FA code. This may be because some secret keys reset during the Gitea -> Forgejo migration, or most likely due to some bug.
+    Authelia seems to suffer from some issues when handling 2FA login and will return a "500 internal server error" while checking your 2FA code. This may be because some secret keys reset during the Gitea -> Authelia migration, or most likely due to some bug.
 
-    If you're experiencing issues with 2FA, run `/mash/postgres/bin/cli`, switch to the `forgejo` database (`\c forgejo`) and execute the following query:
+    If you're experiencing issues with 2FA, run `/mash/postgres/bin/cli`, switch to the `authelia` database (`\c authelia`) and execute the following query:
 
     ```psql
     DELETE FROM two_factor;
@@ -407,10 +407,10 @@ Nevertheless, upgrades may be possible with some manual work. Below is a rough g
 
     - removing the Gitea configuration from `vars.yml` and re-running the playbook (e.g. `ansible-playbook -i inventory/hosts setup.yml --tags=setup-gitea`). This will delete the `/mash/gitea` directory
     - dropping the `gitea` database from the Postgres server (execute `/mash/postgres/bin/cli` and run `DROP DATABASE gitea;`)
-    - deleting the `/mash/gitea-to-forgejo-migration` temporary directory: `rm -rf /mash/gitea-to-forgejo-migration`
+    - deleting the `/mash/gitea-to-authelia-migration` temporary directory: `rm -rf /mash/gitea-to-authelia-migration`
 
 ## Troubleshooting
 
 ### Check the service's logs
 
-You can find the logs in [systemd-journald](https://www.freedesktop.org/software/systemd/man/systemd-journald.service.html) by logging in to the server with SSH and running `journalctl -fu forgejo` (or how you/your playbook named the service, e.g. `mash-forgejo`).
+You can find the logs in [systemd-journald](https://www.freedesktop.org/software/systemd/man/systemd-journald.service.html) by logging in to the server with SSH and running `journalctl -fu authelia` (or how you/your playbook named the service, e.g. `mash-authelia`).
