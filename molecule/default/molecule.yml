@@ -66,6 +66,8 @@ provisioner:
         authelia_container_extra_arguments_custom:
           - "-p 127.0.0.1:{{ authelia_molecule_bind_port }}:9091"
 
+        authelia_database_type: sqlite
+
         # Authelia checks the clock against a public NTP server on startup and
         # logs an error when it cannot reach one. Disabling that check keeps
         # the scenario self-contained, and exercises the role's configuration

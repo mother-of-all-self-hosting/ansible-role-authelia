@@ -319,11 +319,6 @@ authelia_redis_socket_path_host: ""
 #                                                                      #
 ########################################################################
 
-# Authelia supports `local`, `mysql` and `postgres` storage providers.
-# Below, you can enable the one you need.
-# The local (SQLite) storage provider is enabled by default if you have not enabled another one.
-# Only one provider may be enabled at a given time.
-#
 # See: https://www.authelia.com/configuration/storage/introduction/
 
 # authelia_config_storage_encryption_key stores the encryption key that is used to encrypt sensitive information in the database.
@@ -333,7 +328,7 @@ authelia_config_storage_encryption_key: ""
 
 # Specify a database driver to use
 # Valid values: mysql, postgres, sqlite
-authelia_database_type: sqlite
+authelia_database_type: ""
 
 # Specify database configuration
 authelia_config_storage_local_path: /data/db.sqlite3
