@@ -101,7 +101,7 @@ The value of `authelia_config_storage_encryption_key` needs to be at least 20 ch
 
 #### Specify database
 
-It is necessary to select database used by DocuSeal from a MySQL compatible database, Postgres, and SQLite.
+It is necessary to select database used by Authelia from a MySQL compatible database, Postgres, and SQLite.
 
 To use Postgres, add the following configuration to your `vars.yml` file:
 
