@@ -31,7 +31,7 @@ default_2fa_method: ""
 server:
 
   ## The address and port to listen on.
-  address: tcp://0.0.0.0:9091
+  address: tcp://0.0.0.0:{{ authelia_container_http_port }}
 
   ## Set the path on disk to Authelia assets.
   ## Useful to allow overriding of specific static assets.
