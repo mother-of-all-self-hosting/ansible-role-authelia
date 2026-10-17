@@ -101,7 +101,7 @@ The value of `authelia_config_storage_encryption_key` needs to be at least 20 ch
 
 #### Specify database
 
-It is necessary to select database used by Authelia from a MySQL compatible database, Postgres, and SQLite.
+Authelia can use either a MySQL compatible database, Postgres, or SQLite, and you need to choose one.
 
 To use Postgres, add the following configuration to your `vars.yml` file:
 
