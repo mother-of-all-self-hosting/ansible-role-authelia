@@ -67,6 +67,52 @@ traefik.http.middlewares.{{ authelia_identifier }}.forwardAuth.authResponseHeade
 traefik.http.middlewares.{{ authelia_identifier }}-basic.forwardAuth.address=http://{{ authelia_identifier }}:9091/api/verify?auth=basic
 traefik.http.middlewares.{{ authelia_identifier }}-basic.forwardAuth.trustForwardHeader=true
 traefik.http.middlewares.{{ authelia_identifier }}-basic.forwardAuth.authResponseHeaders=Remote-User,Remote-Groups,Remote-Name,Remote-Email
+
+{% if authelia_container_labels_traefik_metrics_enabled %}
+########################################################################
+#                                                                      #
+# Metrics                                                              #
+#                                                                      #
+########################################################################
+
+{% set middlewares = authelia_container_labels_traefik_metrics_middlewares %}
+
+{% if authelia_container_labels_traefik_metrics_middleware_basic_auth_enabled %}
+traefik.http.middlewares.{{ authelia_identifier }}-metrics-basic-auth.basicauth.users={{ authelia_container_labels_traefik_metrics_middleware_basic_auth_users }}
+{% set middlewares = middlewares + [authelia_identifier + '-metrics-basic-auth'] %}
+{% endif %}
+
+traefik.http.middlewares.{{ authelia_identifier }}-metrics-replace-path.replacepath.path=/metrics
+{% set middlewares = middlewares + [authelia_identifier + '-metrics-replace-path'] %}
+
+traefik.http.routers.{{ authelia_identifier }}-metrics.rule={{ authelia_container_labels_traefik_metrics_rule }}
+
+{% if authelia_container_labels_traefik_metrics_priority | int > 0 %}
+traefik.http.routers.{{ authelia_identifier }}-metrics.priority={{ authelia_container_labels_traefik_metrics_priority }}
+{% endif %}
+
+traefik.http.routers.{{ authelia_identifier }}-metrics.service={{ authelia_identifier }}-metrics
+
+{% if middlewares | length > 0 %}
+traefik.http.routers.{{ authelia_identifier }}-metrics.middlewares={{ middlewares | join(',') }}
+{% endif %}
+
+traefik.http.routers.{{ authelia_identifier }}-metrics.entrypoints={{ authelia_container_labels_traefik_metrics_entrypoints }}
+
+traefik.http.routers.{{ authelia_identifier }}-metrics.tls={{ authelia_container_labels_traefik_metrics_tls | to_json }}
+{% if authelia_container_labels_traefik_metrics_tls %}
+traefik.http.routers.{{ authelia_identifier }}-metrics.tls.certResolver={{ authelia_container_labels_traefik_metrics_tls_certResolver }}
+{% endif %}
+
+traefik.http.services.{{ authelia_identifier }}-metrics.loadbalancer.server.port={{ authelia_container_metrics_port }}
+
+########################################################################
+#                                                                      #
+# /Metrics                                                             #
+#                                                                      #
+########################################################################
+{% endif %}
+
 {% endif %}
 
 {% for arg in authelia_container_labels_additional_labels %}

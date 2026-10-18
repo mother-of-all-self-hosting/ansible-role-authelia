@@ -61,8 +61,16 @@ authelia_container_network_deletion_enabled: true
 # Takes an "<ip>:<port>" or "<port>" value (e.g. "127.0.0.1:2586"), or empty string to not expose.
 authelia_container_http_host_bind_port: ""
 
+# Specify how the metrics container publishes its HTTP port (as defined by `authelia_container_metrics_port`).
+#
+# Takes an "<ip>:<port>" or "<port>" value (e.g. "127.0.0.1:2586"), or empty string to not expose.
+authelia_container_metrics_host_bind_port: ""
+
 # The port number in the container
 authelia_container_http_port: 9091
+
+# The port number of the metrics server in the container
+authelia_container_metrics_port: 9959
 
 # A list of additional container networks that the container would be connected to.
 # The role does not create these networks, so make sure they already exist.
@@ -97,6 +105,21 @@ authelia_container_labels_traefik_tls_certResolver: default  # noqa var-naming
 authelia_container_labels_traefik_middleware_basic_auth_enabled: false
 # See: https://doc.traefik.io/traefik/reference/routing-configuration/http/middlewares/basicauth/
 authelia_container_labels_traefik_middleware_basic_auth_users: ""
+
+# Controls if labels are added to expose the Prometheus metrics publicly.
+authelia_container_labels_traefik_metrics_enabled: "{{ authelia_config_telemetry_metrics_enabled }}"
+authelia_container_labels_traefik_metrics_hostname: "{{ authelia_hostname }}"
+# The path prefix must either be `/` or not end with a slash (e.g. `/metrics`).
+authelia_container_labels_traefik_metrics_path_prefix: /metrics
+authelia_container_labels_traefik_metrics_rule: "Host(`{{ authelia_container_labels_traefik_metrics_hostname }}`){% if authelia_container_labels_traefik_metrics_path_prefix != '/' %} && PathPrefix(`{{ authelia_container_labels_traefik_metrics_path_prefix }}`){% endif %}"
+authelia_container_labels_traefik_metrics_priority: 0
+authelia_container_labels_traefik_metrics_entrypoints: "{{ authelia_container_labels_traefik_entrypoints }}"
+authelia_container_labels_traefik_metrics_middlewares: []
+authelia_container_labels_traefik_metrics_tls: "{{ authelia_container_labels_traefik_metrics_entrypoints != 'web' }}"
+authelia_container_labels_traefik_metrics_tls_certResolver: "{{ authelia_container_labels_traefik_tls_certResolver }}"  # noqa var-naming
+authelia_container_labels_traefik_metrics_middleware_basic_auth_enabled: false
+# See: https://doc.traefik.io/traefik/reference/routing-configuration/http/middlewares/basicauth/
+authelia_container_labels_traefik_metrics_middleware_basic_auth_users: ""
 
 # Controls which additional headers to attach to all HTTP requests.
 # To add your own custom request headers, use `authelia_container_labels_traefik_additional_request_headers_custom`
@@ -246,6 +269,8 @@ authelia_config_jwt_secret: ""
 
 # Optional redirect after login for the default session cookie. Must differ from authelia_config_session_authelia_url.
 authelia_config_default_redirection_url: ""
+
+authelia_config_telemetry_metrics_enabled: false
 
 # Specify the timezone
 authelia_environment_variables_tz: UTC

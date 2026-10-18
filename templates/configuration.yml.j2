@@ -117,10 +117,10 @@ telemetry:
   ##
   metrics:
     ## Enable Metrics.
-    enabled: false
+    enabled: {{ authelia_config_telemetry_metrics_enabled | to_json }}
 
     ## The address to listen on for metrics. This should be on a different port to the main server.port value.
-    address: tcp://0.0.0.0:9959
+    address: tcp://0.0.0.0:{{ authelia_container_metrics_port | to_json }}
 
     ## Metrics Server Buffers configuration.
     # buffers:
