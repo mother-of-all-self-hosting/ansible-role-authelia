@@ -111,6 +111,8 @@ authelia_database_type: postgres
 
 Set `mysql` to use a MySQL compatible database and `sqlite` to use SQLite, respectively. The SQLite database is stored in the directory specified with `authelia_data_path`.
 
+For other settings, check variables such as `authelia_database_*` on [`defaults/main.yml`](../defaults/main.yml).
+
 #### Configuring connection to the database server (optional)
 
 By default the role is configured to establish the connection to the database server via a Unix socket. You can mount the Unix socket by adding the following configuration to your `vars.yml` file:
