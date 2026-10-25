@@ -262,9 +262,7 @@ To use LDAP, define `authelia_config_authentication_backend_ldap_*` variables in
 
 ### Integrating with Prometheus (optional)
 
-Authelia can natively expose metrics to Prometheus.
-
-If you are looking for an integration, you can check out the MASH playbook. Refer to [this section of the documentation on the playbook](https://github.com/mother-of-all-self-hosting/mash-playbook/blob/main/components/authelia/README.md#integrating-with-prometheus-optional) for more information.
+Authelia can natively expose metrics to Prometheus. If you are looking for an integration, you can check out the MASH Ansible playbook. Please refer to the service's documentation over there for more information.
 
 ### Extending the configuration
 
