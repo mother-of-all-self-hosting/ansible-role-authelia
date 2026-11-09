@@ -70,8 +70,8 @@ provisioner:
 
         # Variables required for Forgejo to connect to the MariaDB database (via Unix socket)
         authelia_database_type: mysql
-        authelia_database_mysql_username: my_database_username
-        authelia_database_mysql_password: my_database_password
+        authelia_database_mysql_username: /#@my_database_username?%
+        authelia_database_mysql_password: /#@my_database_password?%
         authelia_database_name: authelia
         authelia_database_mysql_socket_enabled: true
         authelia_database_mysql_socket_path_host: "{{ mariadb_run_path }}"

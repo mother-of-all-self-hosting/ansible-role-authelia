@@ -70,8 +70,8 @@ provisioner:
 
         # Variables required for Forgejo to connect to the Postgres database (via Unix socket)
         authelia_database_type: postgres
-        authelia_database_postgres_username: my_database_username
-        authelia_database_postgres_password: my_database_password
+        authelia_database_postgres_username: /#@my_database_username?%
+        authelia_database_postgres_password: /#@my_database_password?%
         authelia_database_name: authelia
         authelia_database_postgres_socket_enabled: true
         authelia_database_postgres_socket_path_host: "{{ postgres_run_path }}"
