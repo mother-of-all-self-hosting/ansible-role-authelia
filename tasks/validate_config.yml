@@ -105,12 +105,9 @@
       You need to define a required configuration setting (`{{ item }}`).
   when: "lookup('vars', item, default='') | string | length == 0"
   with_items:
-    - authelia_identifier
     - authelia_uid
     - authelia_gid
     - authelia_hostname
-    - authelia_path_prefix
-    - authelia_container_network
     - authelia_database_type
     - authelia_config_jwt_secret
     - authelia_config_session_secret
