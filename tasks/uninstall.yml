@@ -71,6 +71,7 @@
               {{ authelia_container_network }}
           register: authelia_network_deletion_result
           changed_when: authelia_container_network in authelia_network_deletion_result.stdout
+          failed_when: authelia_network_deletion_result.rc != 0 and 'not found' not in authelia_network_deletion_result.stderr
 
 - name: Check existence of Authelia local config path
   ansible.builtin.stat:
